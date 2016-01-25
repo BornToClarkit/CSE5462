@@ -30,7 +30,7 @@ long get_port(int argc, char *argv[]){
 }
 
 /* server program called with no argument */
-main(void)
+main(int argc, char* argv[])
 {
   int sock;                     /* initial socket descriptor */
   int msgsock;                  /* accepted socket descriptor,
@@ -48,11 +48,15 @@ main(void)
   perror("error openting datagram socket");
   exit(1);
   }
-  
+  long port = get_port(argc,argv);
+  if(port<0)
+	{
+		exit(1);
+	}  	
   /* construct name of socket to send to */
   sin_addr.sin_family = AF_INET;
   sin_addr.sin_addr.s_addr = INADDR_ANY;
-  sin_addr.sin_port = htons(atoi(port));
+  sin_addr.sin_port = htonl(port);
 
   /* bind socket name to socket */
   if(bind(sock, (struct sockaddr *)&sin_addr, sizeof(struct sockaddr_in)) < 0) {
