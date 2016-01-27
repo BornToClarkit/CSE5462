@@ -10,11 +10,16 @@
 #include<limits.h>
 #include <strings.h>
 #include <string.h>
-#define port "1040"   /* socket file name */
+
 
 long check_args(int argc, char *argv[]){
 	if(argc ==  4 && argv[1] != NULL && argv[2] != NULL && argv[3] != NULL)
 	{
+		if(strlen(argv[3]) >= 19)
+		{
+			printf("File name is too large\n");
+			return -1;
+		}
 		return 0;
 	}
 	else 
@@ -32,7 +37,6 @@ int get_port(char *argv[]){
 		char * endptr;
 		int val;
 		errno = 0;
-		val = atoi(argv[3]);
 		val = strtol(argv[2], &endptr, 10);
 		if(errno !=0 && (val == LONG_MAX || val == LONG_MIN) || (errno !=0 && val==0) || endptr == argv[1] || val < 0)	
 		{
@@ -64,19 +68,20 @@ main(int argc, char *argv[])
                                  * setup */
 	char buf[1024];
 	struct hostent *hp;
-	int file_size;
+	int *file_size;
+	char file_name[20];
 	if(check_args(argc, argv)!=0)
 	{
 		exit(1);
 	}
-	FILE *ifp = fopen(argv[3], "rb");
+	strcpy(file_name, argv[3]);
+	FILE *ifp = fopen(file_name, "rb");
 	if(ifp == NULL)
 	{	
-		printf("Could not open input file: \"%s\"\n", argv[3]);
+		printf("Could not open input file: \"%s\"\n", file_name);
 		exit(1);
 	}
-	file_size = get_file_size(ifp);
-	printf("file size: %i\n", file_size);
+	*file_size = get_file_size(ifp);
 	/* initialize socket connection in unix domain */
 	if((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
 	{
@@ -103,19 +108,25 @@ main(int argc, char *argv[])
 		perror("error connecting stream socket");
 		exit(1);
 	}
-	//open file
-	  
-	/* write buf to sock */
+	//copy file size into buffer
+	*file_size = htons(*file_size);
+	memcpy(buf, file_size, sizeof(int));
+	//copy file name into buffer
+	memcpy(buf + sizeof(int), file_name ,20);
+	/* write buf to sock */	
 	if(write(sock, buf, 1024) < 0) 
 	{
 		perror("error writing on stream socket");
 		exit(1);
 	}
-	printf("Client sends:    %s\n", buf);
-	if(read(sock, buf, 1024) < 0) 
+	printf("Client sends:    %s\n", buf + 4);
+	//TODO: read file and send it
+	
+	/*if(read(sock, buf, 1024) < 0) 
 	{
 		perror("error reading on stream socket");
 		exit(1);
 	}
 	printf("Client receives: %s\n", buf);
+ */
 }
