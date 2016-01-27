@@ -10,10 +10,10 @@
 //server
 
 //checks arg, returns port# if valid, if not returns -1;
-long get_port(int argc, char *argv[]){
+int get_port(int argc, char *argv[]){
 	if(argc ==  2 && argv[1] != NULL){
 		char * endptr;
-		long val;
+		int val;
 		errno = 0;
 		val = strtol(argv[1], &endptr, 10);
 		if(errno !=0 && (val == LONG_MAX || val == LONG_MIN) || (errno !=0 && val==0) || endptr == argv[1] || val < 0)	{
@@ -50,7 +50,7 @@ main(int argc, char* argv[])
 	/* construct name of socket to send to */
 	sin_addr.sin_family = AF_INET;
 	sin_addr.sin_addr.s_addr = INADDR_ANY;
-	if(sin_addr.sin_port = get_port(argc, argv) < 0)
+	if((sin_addr.sin_port = htons(get_port(argc, argv))) < 0)
 	{
 		exit(1);
 	}

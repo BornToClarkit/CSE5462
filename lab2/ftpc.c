@@ -26,12 +26,13 @@ long check_args(int argc, char *argv[]){
 }
 
 //checks arg, returns port# if valid, if not returns -1;
-long get_port(char *argv[]){
+int get_port(char *argv[]){
 	if(argv[2] != NULL)
 	{
 		char * endptr;
-		long val;
+		int val;
 		errno = 0;
+		val = atoi(argv[3]);
 		val = strtol(argv[2], &endptr, 10);
 		if(errno !=0 && (val == LONG_MAX || val == LONG_MIN) || (errno !=0 && val==0) || endptr == argv[1] || val < 0)	
 		{
@@ -46,26 +47,43 @@ long get_port(char *argv[]){
 	}
 }
 
-/* client program called with host name where server is run */
+//used to find the size of the file
+int get_file_size(FILE *fp){
+	fseek(fp, 0, SEEK_END);
+	int size = ftell(fp);
+	fseek(fp, 0, SEEK_SET);
+	return size;
+}
+
+/* client program called with host name and port where server is run */
 main(int argc, char *argv[])
 {
+	int sock;                     /* initial socket descriptor */
+	int rval;                    /* returned value from a read */
+	struct sockaddr_in sin_addr; /* structure for socket name 
+                                 * setup */
+	char buf[1024];
+	struct hostent *hp;
+	int file_size;
 	if(check_args(argc, argv)!=0)
 	{
 		exit(1);
 	}
-	int sock;                     /* initial socket descriptor */
-	int  rval;                    /* returned value from a read */
-	struct sockaddr_in sin_addr; /* structure for socket name 
-                                 * setup */
-	char buf[1024] = "Hello in TCP from client";     /* message to set to server */
-	struct hostent *hp;
+	FILE *ifp = fopen(argv[3], "rb");
+	if(ifp == NULL)
+	{	
+		printf("Could not open input file: \"%s\"\n", argv[3]);
+		exit(1);
+	}
+	file_size = get_file_size(ifp);
+	printf("file size: %i\n", file_size);
 	/* initialize socket connection in unix domain */
 	if((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
 	{
 		perror("error opening socket");
 		exit(1);
 	}
-	hp = gethostbyname(argv[2]);
+	hp = gethostbyname(argv[1]);
 	if(hp == 0) 
 	{
 		fprintf(stderr, "%s: unknown host\n", argv[1]);
@@ -74,11 +92,10 @@ main(int argc, char *argv[])
 	/* construct name of socket to send to */
 	bcopy((void *)hp->h_addr, (void *)&sin_addr.sin_addr, hp->h_length);
 	sin_addr.sin_family = AF_INET;
-	if(sin_addr.sin_port = get_port(argv) < 0)
+	if((sin_addr.sin_port = htons(get_port(argv))) < 0)
 	{
 		exit(1);
 	}
-	printf("%u\n", sin_addr.sin_port);
 	/* establish connection with server */
 	if(connect(sock, (struct sockaddr *)&sin_addr, sizeof(struct sockaddr_in)) < 0) 
 	{
@@ -86,7 +103,8 @@ main(int argc, char *argv[])
 		perror("error connecting stream socket");
 		exit(1);
 	}
-  
+	//open file
+	  
 	/* write buf to sock */
 	if(write(sock, buf, 1024) < 0) 
 	{
