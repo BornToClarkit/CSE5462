@@ -120,7 +120,13 @@ main(int argc, char *argv[])
 		exit(1);
 	}
 	printf("Client sends:    %s\n", buf + 4);
-	//TODO: read file and send it
+	while(fread(buf, 1024, 1, ifp) !=0 ){
+		if(write(sock, buf, 1024) < 0) 
+		{
+			perror("error writing on stream socket");
+			exit(1);
+		}
+	}
 	
 	/*if(read(sock, buf, 1024) < 0) 
 	{
