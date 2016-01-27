@@ -71,11 +71,15 @@ main(int argc, char* argv[])
 	/* put all zeros in buffer (clear) */
 	bzero(buf,1024);
 	/* read from msgsock and place in buf */
+	
+	// TODO: need to read the first 4 bytes and copy to an int
+	// then read next 20 bytes and copy to string
 	if(read(msgsock, buf, 1024) < 0) 
 	{
 		perror("error reading on stream socket");
 		exit(1);
 	} 
+	
 	printf("Server receives: %s\n", buf);
 	/* write message back to client */
 	if(write(msgsock, buf2, 1024) < 0) 
@@ -84,6 +88,7 @@ main(int argc, char* argv[])
 		exit(1);
 	}
 	printf("Server sends:    %s\n", buf2);
+	
 	/* close all connections and remove socket file */
 	close(msgsock);
 	close(sock);

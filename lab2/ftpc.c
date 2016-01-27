@@ -109,7 +109,7 @@ main(int argc, char *argv[])
 		exit(1);
 	}
 	//copy file size into buffer
-	*file_size = htons(*file_size);
+	*file_size = htonl(*file_size);
 	memcpy(buf, file_size, sizeof(int));
 	//copy file name into buffer
 	memcpy(buf + sizeof(int), file_name ,20);
@@ -119,7 +119,7 @@ main(int argc, char *argv[])
 		perror("error writing on stream socket");
 		exit(1);
 	}
-	printf("Client sends:    %s\n", buf + 4);
+	printf("Client sends file size: %i and filename: %s\n", ntohl(*file_size), buf + 4);
 	while(fread(buf, 1024, 1, ifp) !=0 ){
 		if(write(sock, buf, 1024) < 0) 
 		{
