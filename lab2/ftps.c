@@ -42,43 +42,44 @@ main(int argc, char* argv[])
 	char buf2[1024] = "Hello back in TCP from server"; 
 	printf("TCP server waiting for remote connection from clients ...\n");
 	/*initialize socket connection in unix domain*/
-	if((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0){
-	perror("error openting datagram socket");
-	exit(1);
-	}
-	long port = get_port(argc,argv);
-	if(port<0)
+	if((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
 	{
+		perror("error openting datagram socket");
 		exit(1);
-	}  	
-	printf("port:   %u\n", port);
+	}
 	/* construct name of socket to send to */
 	sin_addr.sin_family = AF_INET;
 	sin_addr.sin_addr.s_addr = INADDR_ANY;
-	sin_addr.sin_port = port;
-	printf("port:   %u\n", sin_addr.sin_port);
+	if(sin_addr.sin_port = get_port(argc, argv) < 0)
+	{
+		exit(1);
+	}
 	/* bind socket name to socket */
-	if(bind(sock, (struct sockaddr *)&sin_addr, sizeof(struct sockaddr_in)) < 0) {
+	if(bind(sock, (struct sockaddr *)&sin_addr, sizeof(struct sockaddr_in)) < 0) 
+	{
 		perror("error binding stream socket");
- 	   exit(1);
+		exit(1);
 	}
 	/* listen for socket connection and set max opened socket connetions to 5 */
 	listen(sock, 5);
 	/* accept a (1) connection in socket msgsocket */ 
-	if((msgsock = accept(sock, (struct sockaddr *)NULL, (int *)NULL)) == -1) { 
+	if((msgsock = accept(sock, (struct sockaddr *)NULL, (int *)NULL)) == -1) 
+	{ 
  	   perror("error connecting stream socket");
  	   exit(1);
 	}
 	/* put all zeros in buffer (clear) */
 	bzero(buf,1024);
 	/* read from msgsock and place in buf */
-	if(read(msgsock, buf, 1024) < 0) {
+	if(read(msgsock, buf, 1024) < 0) 
+	{
 		perror("error reading on stream socket");
 		exit(1);
 	} 
 	printf("Server receives: %s\n", buf);
 	/* write message back to client */
-	if(write(msgsock, buf2, 1024) < 0) {
+	if(write(msgsock, buf2, 1024) < 0) 
+	{
 		perror("error writing on stream socket");
 		exit(1);
 	}
