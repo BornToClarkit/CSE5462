@@ -5,6 +5,7 @@
 #include<limits.h>
 #include<sys/types.h>
 #include<sys/socket.h>
+#include <sys/stat.h>
 #include<netinet/in.h>
 #include<string.h>
 //server
@@ -32,22 +33,18 @@ int get_port(int argc, char *argv[]){
 /* server program called with no argument */
 main(int argc, char* argv[])
 {
- 	int sock;                     /* initial socket descriptor */
-	int msgsock;                  /* accepted socket descriptor,
-                                 * each client connection has a
-                                 * unique socket descriptor*/
-	int rval=1;                   /* returned value from a read */  
-	struct sockaddr_in sin_addr; /* structure for socket name setup */
-	char buf[1024];               /* buffer for holding read data */
-	int size[4];
-	long long length;
+ 	int sock;		/* initial socket descriptor */
+	int msgsock;		/* accepted socket descriptor, each client connection has a unique socket descriptor*/
+	struct sockaddr_in sin_addr;		/* structure for socket name setup */
+	char buf[1024];		/* buffer for holding read data */
+	int size_in_network[4];
+	long long file_size;
 	char name[20];
 	char dest[27];
 	int received = 0;
-	int doubledose = 0;
+	int total_recv = 0;
+	struct stat st;		/* used to determine if directory exists */			
 	strcpy(dest,"sub/");
-	char buf2[1024] = "Hello back in TCP from server"; 
-	
 	printf("TCP server waiting for remote connection from clients ...\n");
 	/*initialize socket connection in unix domain*/
 	if((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
@@ -79,61 +76,50 @@ main(int argc, char* argv[])
 	/* put all zeros in buffer (clear) */
 	bzero(buf,1024);
 	/* read from msgsock and place in buf */
-	
-	if(recv(msgsock,size,4,MSG_WAITALL)<0)
+	if(recv(msgsock,size_in_network,4,MSG_WAITALL)<0)
 	{
-		printf("test \n");
 		perror("error reading on stream socket");
 		exit(1);
 	}
-	length = ntohl(*size);
-	printf("size: %d\n",length);
+	file_size = ntohl(*size_in_network);
+	printf("Server receives filesize: %d\n",file_size);
 	if(recv(msgsock,name,20,MSG_WAITALL)<0)
 	{
 		perror("error reading on stream socket");
 		exit(1);
 	}
-	printf("name: %s\n",name);
+	printf("Server receives filename: %s\n",name);
+	if(stat(dest, &st)!=0)
+	{
+		printf("Directory does not exist, making directory\n");
+		if(mkdir(dest, 0777)!=0)
+		{
+			perror("ERROR: could not make sub directory");
+			exit(1);
+		}
+	}
 	char *location =strcat(dest,name);
 	FILE * out = fopen(location,"wb");
 	if(!out)
 	{
-		printf("error opening the file to write output to... make sure there is a subdirectery called sub");
-		exit(1);
+		//printf("error opening the file to write output to... make sure there is a subdirectery called sub");
+		//exit(1);
+		
 	}
-	printf("location: %s\n",location);
-	
+	printf("File saved to this location: %s\n",location);
 	/* put all zeros in buffer (clear) */
 	bzero(buf,1024);
 	/* read from msgsock and place in buf */
-		received = 0;
-	while(received<length){
-	//printf("%i\n", received);
-		doubledose =recv(msgsock, buf, 1024,0);
-		if(doubledose != 1024){
-			printf("double dose: %i\n", doubledose);
-			fflush(stdout);
-		}
-		received = received + doubledose;
-		if((fwrite(buf,1,doubledose,out))!= doubledose){
-			perror("ERROR");
+	while(total_recv < file_size)
+	{
+		received =recv(msgsock, buf, 1024,0);
+		total_recv += received;
+		if((fwrite(buf,1,received,out))!= received){
+			perror("ERROR writing to file");
 			exit(1);
 		}
 	}
-	printf("total received: %i\n", received);
-	printf("length: %i\n", length);
-	//printf("Server receives: %s\n", buf);
-	/* write message back to client */
-	/*if(write(msgsock, buf2, 1024) < 0) 
-	{
-		perror("error writing on stream socket");
-		exit(1);
-	}
-	*/
-	//printf("Server sends:    %s\n", buf2);
-	
 	/* close all connections and remove socket file */
-	
 	close(msgsock);
 	close(sock);
 	fclose(out);
