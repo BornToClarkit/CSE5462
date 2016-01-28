@@ -97,6 +97,11 @@ main(int argc, char* argv[])
 	printf("name: %s\n",name);
 	char *location =strcat(dest,name);
 	FILE * out = fopen(location,"wb");
+	if(!out)
+	{
+		printf("error opening the file to write output to... make sure there is a subdirectery called sub");
+		exit(1);
+	}
 	printf("location: %s\n",location);
 	
 	/* put all zeros in buffer (clear) */
