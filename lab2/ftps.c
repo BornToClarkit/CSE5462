@@ -39,7 +39,14 @@ main(int argc, char* argv[])
 	int rval=1;                   /* returned value from a read */  
 	struct sockaddr_in sin_addr; /* structure for socket name setup */
 	char buf[1024];               /* buffer for holding read data */
+	char size[4];
+	long long length;
+	char name[20];
+	char dest[27];
+	char *location;
+	strcpy(dest,"sub/");
 	char buf2[1024] = "Hello back in TCP from server"; 
+	FILE * out;
 	printf("TCP server waiting for remote connection from clients ...\n");
 	/*initialize socket connection in unix domain*/
 	if((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
@@ -72,15 +79,36 @@ main(int argc, char* argv[])
 	bzero(buf,1024);
 	/* read from msgsock and place in buf */
 	
-	// TODO: need to read the first 4 bytes and copy to an int
-	// then read next 20 bytes and copy to string
-	if(read(msgsock, buf, 1024) < 0) 
+	if(recv(msgsock,size,4,MSG_WAITALL)<0)
+	{
+		printf("test \n");
+		perror("error reading on stream socket");
+		exit(1);
+	}
+	printf("size: %s\n", size);
+	length = ntohs(atoi(size));
+	printf("size: %d\n",length);
+	if(recv(msgsock,name,20,MSG_WAITALL)<0)
 	{
 		perror("error reading on stream socket");
 		exit(1);
-	} 
+	}
+	printf("name: %s\n",name);
+	location =strcat(dest,name);
+	out = fopen(location,"w");
+	printf("location: %s\n",location);
+	/* put all zeros in buffer (clear) */
+	bzero(buf,1024);
+	/* read from msgsock and place in buf */
+		
+	while(recv(msgsock, buf, 1024,0)<0){
+		
+		
+		fprintf(out, buf);
+		bzero(buf,1024);
+	}
 	
-	printf("Server receives: %s\n", buf);
+	//printf("Server receives: %s\n", buf);
 	/* write message back to client */
 	if(write(msgsock, buf2, 1024) < 0) 
 	{
@@ -92,4 +120,5 @@ main(int argc, char* argv[])
 	/* close all connections and remove socket file */
 	close(msgsock);
 	close(sock);
+	fclose(out);
 }
