@@ -36,20 +36,18 @@ main(int argc, char* argv[])
  	int sock;		/* initial socket descriptor */
 	int msgsock;		/* accepted socket descriptor, each client connection has a unique socket descriptor*/
 	struct sockaddr_in sin_addr;		/* structure for socket name setup */
-	char buf[1024];		/* buffer for holding read data */
+	char buf[1000];		/* buffer for holding read data */
 	int size_in_network[4];
 	long long file_size;
 	char name[20];
 	char dest[27];
 	int received = 0;
 	int total_recv = 0;
-	struct stat st;		/* used to determine if directory exists */			
-	strcpy(dest,"sub/");
 	printf("TCP server waiting for remote connection from clients ...\n");
 	/*initialize socket connection in unix domain*/
 	if((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
 	{
-		perror("error openting datagram socket");
+		perror("error opening datagram socket");
 		exit(1);
 	}
 	/* construct name of socket to send to */
@@ -74,7 +72,7 @@ main(int argc, char* argv[])
  	   exit(1);
 	}
 	/* put all zeros in buffer (clear) */
-	bzero(buf,1024);
+	bzero(buf,1000);
 	/* read from msgsock and place in buf */
 	if(recv(msgsock,size_in_network,4,MSG_WAITALL)<0)
 	{
@@ -89,6 +87,8 @@ main(int argc, char* argv[])
 		exit(1);
 	}
 	printf("Server receives filename: %s\n",name);
+	struct stat st;		/* used to determine if directory exists */			
+	strcpy(dest,"sub/");
 	if(stat(dest, &st)!=0)
 	{
 		printf("Directory does not exist, making directory\n");
@@ -102,17 +102,17 @@ main(int argc, char* argv[])
 	FILE * out = fopen(location,"wb");
 	if(!out)
 	{
-		//printf("error opening the file to write output to... make sure there is a subdirectery called sub");
-		//exit(1);
+		printf("error opening the output file");
+		exit(1);
 		
 	}
 	printf("File saved to this location: %s\n",location);
 	/* put all zeros in buffer (clear) */
-	bzero(buf,1024);
+	bzero(buf,1000);
 	/* read from msgsock and place in buf */
 	while(total_recv < file_size)
 	{
-		received =recv(msgsock, buf, 1024,0);
+		received =recv(msgsock, buf, 1000,0);
 		total_recv += received;
 		if((fwrite(buf,1,received,out))!= received){
 			perror("ERROR writing to file");

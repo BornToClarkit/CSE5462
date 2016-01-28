@@ -66,7 +66,7 @@ main(int argc, char *argv[])
 	int rval;                    /* returned value from a read */
 	struct sockaddr_in sin_addr; /* structure for socket name 
                                  * setup */
-	char buf[1024];
+	char buf[1000];
 	struct hostent *hp;
 	printf("test\n");
 	int pie;
@@ -129,7 +129,7 @@ main(int argc, char *argv[])
 	int sent = 0;
 	int total_sent = 0;
 	while(total_sent < ntohl(*file_size)){
-	sent = fread(buf,1,1024,ifp);
+	sent = fread(buf,1,1000,ifp);
 	total_sent += sent;
 		if(send(sock,buf, sent,0)< 0) 
 		{
@@ -139,5 +139,5 @@ main(int argc, char *argv[])
 	}
 	printf("Client done sending file\n");
 	free(file_size);
-	close(ifp);
+	fclose(ifp);
 }
