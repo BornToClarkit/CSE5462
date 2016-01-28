@@ -80,13 +80,12 @@ main(int argc, char* argv[])
 	bzero(buf,1024);
 	/* read from msgsock and place in buf */
 	
-	if(recv(msgsock,size,4,0)<0)
+	if(recv(msgsock,size,4,MSG_WAITALL)<0)
 	{
 		printf("test \n");
 		perror("error reading on stream socket");
 		exit(1);
 	}
-	printf("size: %s\n", size);
 	length = ntohl(*size);
 	printf("size: %d\n",length);
 	if(recv(msgsock,name,20,MSG_WAITALL)<0)
@@ -107,13 +106,22 @@ main(int argc, char* argv[])
 	/* put all zeros in buffer (clear) */
 	bzero(buf,1024);
 	/* read from msgsock and place in buf */
-		
+		received = 0;
 	while(received<length){
-		doubledose =recv(msgsock, buf, 1024,0);;
-		received +=doubledose;
-		fwrite(buf,doubledose,1,out);
+	//printf("%i\n", received);
+		doubledose =recv(msgsock, buf, 1024,0);
+		if(doubledose != 1024){
+			printf("double dose: %i\n", doubledose);
+			fflush(stdout);
+		}
+		received = received + doubledose;
+		if((fwrite(buf,1,doubledose,out))!= doubledose){
+			perror("ERROR");
+			exit(1);
+		}
 	}
-	
+	printf("total received: %i\n", received);
+	printf("length: %i\n", length);
 	//printf("Server receives: %s\n", buf);
 	/* write message back to client */
 	/*if(write(msgsock, buf2, 1024) < 0) 

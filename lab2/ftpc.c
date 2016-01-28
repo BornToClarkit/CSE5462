@@ -120,7 +120,7 @@ main(int argc, char *argv[])
 	//copy file name into buffer
 	memcpy(buf + sizeof(int), file_name ,20);
 	/* write buf to sock */	
-	if(write(sock, buf, 1024) < 0) 
+	if(send(sock, buf,24,0) < 0) 
 	{
 		perror("error writing on stream socket");
 		exit(1);
@@ -140,6 +140,7 @@ main(int argc, char *argv[])
 	}
 	printf("%i\n", y);
 	free(file_size);
+	close(ifp);
 	
 	/*if(read(sock, buf, 1024) < 0) 
 	{
