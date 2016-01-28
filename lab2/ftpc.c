@@ -127,14 +127,18 @@ main(int argc, char *argv[])
 	}
 	printf("Client sends file size: %i and filename: %s\n", ntohl(*file_size), buf + 4);
 	int x = 0;
-	while((read(ifp, buf, 1024) > 0)){
-			printf("%i", x);
+	int y = 0;
+	while(y < ntohl(*file_size)){
+	x = fread(buf,1,1024,ifp);
+	y += x;
+			printf("%i\n", x);
 		if(send(sock,buf, x,0)< 0) 
 		{
 			perror("error writing on stream socket");
 			exit(1);
 		}
 	}
+	printf("%i\n", y);
 	free(file_size);
 	
 	/*if(read(sock, buf, 1024) < 0) 
