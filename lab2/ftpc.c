@@ -29,7 +29,7 @@ long check_args(int argc, char *argv[]){
 	else 
 	{
 		printf("Invalid number of arguments or an argument was null\ncommand should look like this:\n");
-		printf("ftpc <remote-IP> <port-number> <local-file-to-transfer> \n");
+		printf("ftpc <remote-host> <port-number> <local-file-to-transfer> \n");
 		return -1;
 	}
 }
