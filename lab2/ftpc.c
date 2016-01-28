@@ -68,7 +68,10 @@ main(int argc, char *argv[])
                                  * setup */
 	char buf[1024];
 	struct hostent *hp;
-	int *file_size;
+	printf("test\n");
+	int pie;
+	int *file_size = NULL;
+	
 	char file_name[20];
 	if(check_args(argc, argv)!=0)
 	{
@@ -76,12 +79,15 @@ main(int argc, char *argv[])
 	}
 	strcpy(file_name, argv[3]);
 	FILE *ifp = fopen(file_name, "rb");
-	if(ifp == NULL)
+	printf("test\n");
+	if(!ifp)
 	{	
+		printf("test\n");
 		printf("Could not open input file: \"%s\"\n", file_name);
 		exit(1);
 	}
 	*file_size = get_file_size(ifp);
+	printf("test\n");
 	/* initialize socket connection in unix domain */
 	if((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
 	{
@@ -94,6 +100,7 @@ main(int argc, char *argv[])
 		fprintf(stderr, "%s: unknown host\n", argv[1]);
 		exit(2);
 	}
+	
 	/* construct name of socket to send to */
 	bcopy((void *)hp->h_addr, (void *)&sin_addr.sin_addr, hp->h_length);
 	sin_addr.sin_family = AF_INET;
@@ -109,7 +116,10 @@ main(int argc, char *argv[])
 		exit(1);
 	}
 	//copy file size into buffer
+
 	*file_size = htonl(*file_size);
+	pie = ntohl(*file_size);
+	printf("size: %d\n",pie);
 	memcpy(buf, file_size, sizeof(int));
 	//copy file name into buffer
 	memcpy(buf + sizeof(int), file_name ,20);
@@ -121,7 +131,7 @@ main(int argc, char *argv[])
 	}
 	printf("Client sends file size: %i and filename: %s\n", ntohl(*file_size), buf + 4);
 	while(fread(buf, 1024, 1, ifp) !=0 ){
-		if(write(sock, buf, 1024) < 0) 
+		if(send(sock,buf,1024,0)< 0) 
 		{
 			perror("error writing on stream socket");
 			exit(1);
