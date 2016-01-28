@@ -10,6 +10,11 @@
 #include<string.h>
 //server
 
+/*  Connor Clark
+	Curtis Holton
+*/
+
+
 //checks arg, returns port# if valid, if not returns -1;
 int get_port(int argc, char *argv[]){
 	if(argc ==  2 && argv[1] != NULL){

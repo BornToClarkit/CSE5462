@@ -7,14 +7,14 @@ CFLAGS =
 # setup for system
 LIBS =
 
-all: cli srv 
+all: ftpc ftps 
 
-cli:	$(OBJCLI)
+ftpc:	$(OBJCLI)
 	$(CC) $(CFLAGS) -o $@ $(OBJCLI) $(LIBS)
 
-srv:	$(OBJSRV)
+ftps:	$(OBJSRV)
 	$(CC) $(CFLAGS) -o $@ $(OBJSRV) $(LIBS)
 
 clean:
-	rm cli srv
+	rm ftpc ftps
 

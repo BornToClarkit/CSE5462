@@ -1,5 +1,4 @@
 /* client.c using TCP */
-/* Client for connecting to Internet stream server waiting on port 1040 */
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -10,6 +9,11 @@
 #include<limits.h>
 #include <strings.h>
 #include <string.h>
+//client
+
+/*  Connor Clark
+	Curtis Holton
+*/
 
 
 long check_args(int argc, char *argv[]){
@@ -68,7 +72,6 @@ main(int argc, char *argv[])
                                  * setup */
 	char buf[1000];
 	struct hostent *hp;
-	printf("test\n");
 	int pie;
 	int *file_size = NULL;
 	file_size = malloc(sizeof(int));
@@ -129,8 +132,8 @@ main(int argc, char *argv[])
 	int sent = 0;
 	int total_sent = 0;
 	while(total_sent < ntohl(*file_size)){
-	sent = fread(buf,1,1000,ifp);
-	total_sent += sent;
+		sent = fread(buf,1,1000,ifp);
+		total_sent += sent;
 		if(send(sock,buf, sent,0)< 0) 
 		{
 			perror("error writing on stream socket");
