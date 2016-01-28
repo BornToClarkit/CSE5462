@@ -71,7 +71,7 @@ main(int argc, char *argv[])
 	printf("test\n");
 	int pie;
 	int *file_size = NULL;
-	
+	file_size = malloc(sizeof(int));
 	char file_name[20];
 	if(check_args(argc, argv)!=0)
 	{
@@ -79,7 +79,6 @@ main(int argc, char *argv[])
 	}
 	strcpy(file_name, argv[3]);
 	FILE *ifp = fopen(file_name, "rb");
-	printf("test\n");
 	if(!ifp)
 	{	
 		printf("test\n");
@@ -87,7 +86,6 @@ main(int argc, char *argv[])
 		exit(1);
 	}
 	*file_size = get_file_size(ifp);
-	printf("test\n");
 	/* initialize socket connection in unix domain */
 	if((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
 	{
@@ -100,7 +98,6 @@ main(int argc, char *argv[])
 		fprintf(stderr, "%s: unknown host\n", argv[1]);
 		exit(2);
 	}
-	
 	/* construct name of socket to send to */
 	bcopy((void *)hp->h_addr, (void *)&sin_addr.sin_addr, hp->h_length);
 	sin_addr.sin_family = AF_INET;
@@ -116,7 +113,6 @@ main(int argc, char *argv[])
 		exit(1);
 	}
 	//copy file size into buffer
-
 	*file_size = htonl(*file_size);
 	pie = ntohl(*file_size);
 	printf("size: %d\n",pie);
@@ -130,13 +126,16 @@ main(int argc, char *argv[])
 		exit(1);
 	}
 	printf("Client sends file size: %i and filename: %s\n", ntohl(*file_size), buf + 4);
-	while(fread(buf, 1024, 1, ifp) !=0 ){
-		if(send(sock,buf,1024,0)< 0) 
+	int x = 0;
+	while((read(ifp, buf, 1024) > 0)){
+			printf("%i", x);
+		if(send(sock,buf, x,0)< 0) 
 		{
 			perror("error writing on stream socket");
 			exit(1);
 		}
 	}
+	free(file_size);
 	
 	/*if(read(sock, buf, 1024) < 0) 
 	{

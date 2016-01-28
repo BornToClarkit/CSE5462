@@ -43,12 +43,11 @@ main(int argc, char* argv[])
 	long long length;
 	char name[20];
 	char dest[27];
-	char *location;
-	int received;
-	int doubledose;
+	int received = 0;
+	int doubledose = 0;
 	strcpy(dest,"sub/");
 	char buf2[1024] = "Hello back in TCP from server"; 
-	FILE * out;
+	
 	printf("TCP server waiting for remote connection from clients ...\n");
 	/*initialize socket connection in unix domain*/
 	if((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
@@ -96,29 +95,32 @@ main(int argc, char* argv[])
 		exit(1);
 	}
 	printf("name: %s\n",name);
-	location =strcat(dest,name);
-	out = fopen(location,"wb");
+	char *location =strcat(dest,name);
+	FILE * out = fopen(location,"wb");
 	printf("location: %s\n",location);
+	
 	/* put all zeros in buffer (clear) */
 	bzero(buf,1024);
 	/* read from msgsock and place in buf */
 		
 	while(received<length){
-		doubledose =recv(msgsock, buf, 1024,0);
+		doubledose =recv(msgsock, buf, 1024,0);;
 		received +=doubledose;
 		fwrite(buf,doubledose,1,out);
 	}
 	
 	//printf("Server receives: %s\n", buf);
 	/* write message back to client */
-	if(write(msgsock, buf2, 1024) < 0) 
+	/*if(write(msgsock, buf2, 1024) < 0) 
 	{
 		perror("error writing on stream socket");
 		exit(1);
 	}
-	printf("Server sends:    %s\n", buf2);
+	*/
+	//printf("Server sends:    %s\n", buf2);
 	
 	/* close all connections and remove socket file */
+	
 	close(msgsock);
 	close(sock);
 	fclose(out);
