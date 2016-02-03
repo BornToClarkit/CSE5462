@@ -1,6 +1,6 @@
 struct Packet{
-	struct sockaddr *address;
 	socklen_t address_len;
+	struct sockaddr *address;
 	int fileSize;
 	char fileName[20];
 	char message[1024];
