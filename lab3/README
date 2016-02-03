@@ -1,0 +1,15 @@
+README
+
+Connor Clark
+Curtis Holton
+
+This program sends one file to a machine over a network using TCP. The receiving machine must have the server process started before starting the client. The file will be written to a sub directory called "sub".
+
+To compile the server and client use the make command
+
+
+To start the server:
+	ftps <port-#>
+	
+To start the Client:
+	ftpc <name-of-server> <server-port-#> <file-to-transfer>
