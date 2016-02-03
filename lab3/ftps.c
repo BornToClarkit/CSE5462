@@ -35,20 +35,7 @@ int get_port(int argc, char *argv[]){
 	}
 }
 
-/*
-should send a packet to tcpd, then wait for tcpd to send data back
-*/
-ssize_t RECV(int sockfd, void *buf, size_t len, int flags){
-	struct sockaddr_in src_addr;
-	int addr_len=sizeof(struct sockaddr_in);
-	//send message to tcpd
-	sendto(sockfd, buf, len, flags, NULL, 0);
-	return recvfrom(sockfd, buf, len, flags, (struct sockaddr *)&src_addr , &addr_len);
-}
 
-int SOCKET(int domain, int type, int protocol){
-	return socket(AF_INET, SOCK_DGRAM, 0);
-}
 
 /* server program called with no argument */
 main(int argc, char* argv[])
@@ -63,7 +50,7 @@ main(int argc, char* argv[])
 	char dest[27];
 	int received = 0;
 	int total_recv = 0;
-	printf("TCP server waiting for remote connection from clients ...\n");
+	//printf("TCP server waiting for remote connection from clients ...\n");
 	/*initialize socket connection in unix domain*/
 	if((sock = SOCKET(AF_INET, SOCK_DGRAM, 0)) < 0)
 	{
