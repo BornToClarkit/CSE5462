@@ -9,20 +9,20 @@ struct Packet{
 ssize_t RECV(int socket, void *buffer, size_t length, int flags)
 {
 	//stuff
-	recvfrom();
+	//recvfrom();
 }
 
 ssize_t SEND(int socket, const void*buffer, size_t length, int flags)
 {
 	//break up buffer struct that was sent through the buffer so that it fits into the 
 	//	arguments of sendto()
-	struct Packet *packet;
-	socklen_t* address_length = NULL;
-	struct sockaddr *address;
-	bcopy(packet, buffer,length);
+	//struct Packet *packet;
+	//socklen_t* address_length = NULL;
+	//struct sockaddr *address;
+	//bcopy(packet, buffer,length);
 
 	
-	sendto(socket,packet->message);
+	//sendto(socket,packet->message);
 }
 
 int CONNECT(void)
@@ -33,4 +33,8 @@ int CONNECT(void)
 int ACCEPT(void)
 {
 
+}
+
+int SOCKET(int domain, int type, int protocol){
+	return socket(AF_INET, SOCK_DGRAM, 0);
 }
