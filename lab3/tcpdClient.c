@@ -8,6 +8,7 @@
 #include <sys/stat.h>
 #include<netinet/in.h>
 #include<string.h>
+#include "CapitalFunctions.h"
 
 #define LOCAL_PORT 6666
 #define REMOTE_PORT 9999
@@ -66,10 +67,21 @@ int main(int argc, char* argv[]){
 	/* put all zeros in buffer (clear) */
 	bzero(buf,1000);
 	
+	//struct sockaddr_in tosend;
+	//tosend.sin_family = AF_INET;
+	//tosend.sin_port = 4444;
+	//tosend.sin_addr.s_addr = INADDR_ANY;
+	//struct Packet pac;
+	//pac.address = local_sock;
+	//char blah[] = "blah";
+	//memcpy(pac.buff, blah, 5);
+	
+	
 	
 	while(1){
 		printf("in loop\n");
-		recvfrom(local_sock, buf, 1000, 0, (struct sockaddr *)&src_addr , &src_addr_len);
+		//recvfrom(local_sock, buf, 1000, 0, (struct sockaddr *)&src_addr , &src_addr_len);
 		//send to troll
+		sendto(local_sock, buf, 1000, 0, (struct sockaddr *)&src_addr , sizeof(src_addr));
 	}
 }
