@@ -1,9 +1,7 @@
 struct Packet{
+	struct sockaddr_in *address;
 	socklen_t address_len;
-	struct sockaddr *address;
-	int fileSize;
-	char fileName[20];
-	char message[1024];
+	char buff[1024];
 };
 
 ssize_t RECV(int socket, void *buffer, size_t length, int flags);
