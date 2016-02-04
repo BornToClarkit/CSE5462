@@ -9,6 +9,7 @@
 #include<limits.h>
 #include <strings.h>
 #include <string.h>
+#include "CapitalFunctions.h"
 //client
 
 /*  Connor Clark
@@ -70,6 +71,8 @@ main(int argc, char *argv[])
 	int rval;                    /* returned value from a read */
 	struct sockaddr_in sin_addr; /* structure for socket name 
                                  * setup */
+  struct sockaddr_in to_send;
+  struct Packet packet;
 	char buf[1000];
 	struct hostent *hp;
 	int pie;
@@ -90,7 +93,7 @@ main(int argc, char *argv[])
 	}
 	*file_size = get_file_size(ifp);
 	/* initialize socket connection in unix domain */
-	if((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+	if((sock = SOCKET(AF_INET, SOCK_STREAM, 0)) < 0)
 	{
 		perror("error opening socket");
 		exit(1);
@@ -102,28 +105,26 @@ main(int argc, char *argv[])
 		exit(2);
 	}
 	/* construct name of socket to send to */
-	bcopy((void *)hp->h_addr, (void *)&sin_addr.sin_addr, hp->h_length);
-	sin_addr.sin_family = AF_INET;
-	if((sin_addr.sin_port = htons(get_port(argv))) < 0)
+	bcopy((void *)hp->h_addr, (void *)&to_send.sin_addr, hp->h_length);
+	to_send.sin_family = htons(AF_INET);
+	if((to_send.sin_port = htons(get_port(argv))) < 0)
 	{
 		exit(1);
 	}
+	//
 	/* establish connection with server */
-	if(connect(sock, (struct sockaddr *)&sin_addr, sizeof(struct sockaddr_in)) < 0) 
-	{
-		close(sock);
-		perror("error connecting stream socket");
-		exit(1);
-	}
 	//copy file size into buffer
 	*file_size = htonl(*file_size);
 	pie = ntohl(*file_size);
 	printf("size: %d\n",pie);
-	memcpy(buf, file_size, sizeof(int));
+	memcpy(packet.buff, file_size, sizeof(int));
 	//copy file name into buffer
-	memcpy(buf + sizeof(int), file_name ,20);
+	memcpy(packet.buff + sizeof(int), file_name ,20);
 	/* write buf to sock */	
-	if(send(sock, buf,24,0) < 0) 
+	packet.address_len = sizeof(struct sockaddr_in);
+	packet.address = &to_send;
+	memcpy(buf,&packet,sizeof(struct Packet));
+	if(SEND(sock, buf,sizeof(struct Packet),0) < 0) 
 	{
 		perror("error writing on stream socket");
 		exit(1);
@@ -132,9 +133,10 @@ main(int argc, char *argv[])
 	int sent = 0;
 	int total_sent = 0;
 	while(total_sent < ntohl(*file_size)){
-		sent = fread(buf,1,1000,ifp);
+		sent = fread(packet.buff,1,1000,ifp);
 		total_sent += sent;
-		if(send(sock,buf, sent,0)< 0) 
+		memcpy(buf,&packet,sizeof(struct Packet));
+		if(SEND(sock,buf, sent,0)< 0) 
 		{
 			perror("error writing on stream socket");
 			exit(1);
