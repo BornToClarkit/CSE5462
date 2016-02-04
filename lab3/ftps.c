@@ -8,6 +8,7 @@
 #include <sys/stat.h>
 #include<netinet/in.h>
 #include<string.h>
+#include "CapitalFunctions.h"
 //server
 
 /*  Connor Clark
@@ -61,7 +62,7 @@ main(int argc, char* argv[])
 	
 	 /* create name with parameters and bind name to socket */
     sin_addr.sin_family = AF_INET;
-    sin_addr.sin_port = get_port(argc, argv);
+    sin_addr.sin_port = htons(get_port(argc, argv));
     sin_addr.sin_addr.s_addr = INADDR_ANY;
     if(bind(sock, (struct sockaddr *)&sin_addr, sizeof(sin_addr)) < 0) {
 	perror("getting socket name");
@@ -73,18 +74,22 @@ main(int argc, char* argv[])
 	perror("getting sock name");
 	exit(3);
     }
-    printf("Server waiting on port # %d\n", sin_addr.sin_port);
+    printf("Server waiting on port # %d\n", ntohs(sin_addr.sin_port));
 	/* put all zeros in buffer (clear) */
 	bzero(buf,1000);
 	/* read from msgsock and place in buf */
-	if(RECV(sock,size_in_network,4,MSG_WAITALL)<0)
+	if(RECV(sock,size_in_network,4 + sizeof(struct sockaddr_in),MSG_WAITALL)<0)
 	{
 		perror("error reading on datagram socket");
 		exit(1);
 	}
-	file_size = ntohl(*size_in_network);
+	struct Packet packet;
+	bcopy(size_in_network,&packet,sizeof(size_in_network));
+	
+	printf("pie\n");
+	file_size = ntohl(*packet.buff);
 	printf("Server receives filesize: %d\n",file_size);
-	if(RECV(sock,name,20,MSG_WAITALL)<0)
+	if(RECV(sock,name,20 + sizeof(struct sockaddr_in),MSG_WAITALL)<0)
 	{
 		perror("error reading on stream socket");
 		exit(1);
@@ -115,7 +120,7 @@ main(int argc, char* argv[])
 	/* read from msgsock and place in buf */
 	while(total_recv < file_size)
 	{
-		received =RECV(sock, buf, 1000,0);
+		received =RECV(sock, buf, 1024,0);
 		total_recv += received;
 		if((fwrite(buf,1,received,out))!= received){
 			perror("ERROR writing to file");

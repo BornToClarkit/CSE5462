@@ -9,14 +9,17 @@
 #include <strings.h>
 #include <string.h>
 struct Packet{
-	struct sockaddr_in *address;
-	socklen_t address_len;
+	struct sockaddr_in address;
 	char buff[1024];
 };
 ssize_t RECV(int socket, void *buffer, size_t length, int flags)
 {
-	//stuff
-	//recvfrom();
+	struct sockaddr_in src_addr;
+	int src_addr_len;
+
+	ssize_t pie =recvfrom(socket, buffer, length+sizeof(struct sockaddr_in), flags, (struct sockaddr *)&src_addr , &src_addr_len);
+	printf("pie is good\n");
+	return pie;
 }
 
 ssize_t SEND(int socket, const void*buffer, size_t length, int flags)
@@ -34,18 +37,13 @@ ssize_t SEND(int socket, const void*buffer, size_t length, int flags)
 	{
 		exit(1);
 	}
-
+	//memcpy(&packet,buffer,length);
+	//printf("stuff: %d",ntohs(atoi(packet.buff)));
 	
-	sendto(socket,buffer,1000,0,(struct sockaddr*)&daemon,sizeof(struct sockaddr_in));
+	ssize_t pie =sendto(socket,buffer,length,0,(struct sockaddr*)&daemon,sizeof(daemon));
 
-	//struct Packet *packet;
-	//socklen_t* address_length = NULL;
-	//struct sockaddr *address;
-	//bcopy(packet, buffer,length);
 
-	
-	//sendto(socket,packet->message);
-
+	return pie;
 }
 
 int CONNECT(void)
