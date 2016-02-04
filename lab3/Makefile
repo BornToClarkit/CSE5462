@@ -3,12 +3,14 @@
 CC = gcc
 OBJCLI = ftpc.o CapitalFunctions.o
 OBJSRV = ftps.o	CapitalFunctions.o
-CFLAGS = -Wall
+OBJTCPD_CLIENT = tcpdClient.o CapitalFunctions.o
+OBJTCPD_SERVER = tcpdServer.o CapitalFunctions.o
+CFLAGS =
 DEPS = CapitalFunctions.h
 # setup for system
 LIBS =
 
-all: ftpc ftps 
+all: ftpc ftps tcpdClient tcpdServer
 
 %.o: %.c $(DEPS)
 	$(CC) $(CFLAGS) -c -o $@ $<
@@ -17,6 +19,12 @@ ftpc:	$(OBJCLI)
 	$(CC) $(CFLAGS) -o $@ $^
 
 ftps:	$(OBJSRV)
+	$(CC) $(CFLAGS) -o $@ $^
+	
+tcpdClient:	$(OBJTCPD_CLIENT)
+	$(CC) $(CFLAGS) -o $@ $^
+	
+tcpdServer: $(OBJTCPD_SERVER)
 	$(CC) $(CFLAGS) -o $@ $^
 
 clean:
