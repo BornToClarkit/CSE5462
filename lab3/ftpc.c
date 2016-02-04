@@ -73,7 +73,7 @@ main(int argc, char *argv[])
                                  * setup */
   struct sockaddr_in to_send;
   struct Packet packet;
-	char buf[1000];
+	char buf[1040];
 	struct hostent *hp;
 	int pie;
 	int *file_size = NULL;
@@ -115,38 +115,36 @@ main(int argc, char *argv[])
 	/* establish connection with server */
 	//copy file size into buffer
 	*file_size = htonl(*file_size);
-	
-	printf("size: %d\n",pie);
 	memcpy(packet.buff, file_size,4);
-	char blah[4];
-	memcpy(blah, packet.buff, 4);
-	pie = atoi(blah);
-	printf("test2: %d\n",pie);
-	printf("test: %d\n",ntohs(atoi(packet.buff)));
+	memcpy(file_size,packet.buff,4);
+
 	//copy file name into buffer
 	memcpy(packet.buff + sizeof(int), file_name ,20);
+	memcpy(file_name,packet.buff+4,20);
 	/* write buf to sock */	
 	packet.address = to_send;
-	
-	if(SEND(sock,&packet,sizeof(struct Packet),0) < 0) 
+	printf("port:%d\n",ntohs(packet.address.sin_port));
+	if(SEND(sock,&packet,40,0) < 0) 
 	{
 		perror("error writing on stream socket");
 		exit(1);
 	}
 	
-	printf("Client sends file size: %i and filename: %s\n", ntohl(*file_size), packet.buff + 4);
+	printf("Client sends file size: %i and filename: %s\n", ntohl(*file_size), file_name);
 	int sent = 0;
 	int total_sent = 0;
 	while(total_sent < ntohl(*file_size)){
 		sent = fread(packet.buff,1,1024,ifp);
 		
 		total_sent += sent;
-		if(SEND(sock,&packet, sent,0)< 0) 
+		if(SEND(sock,&packet,sent+16,0)< 0) 
 		{
 			perror("error writing on stream socket");
 			exit(1);
 		}
+		usleep(10);
 	}
+	printf("total sent: %d\n",total_sent);
 	printf("Client done sending file\n");
 	free(file_size);
 	fclose(ifp);

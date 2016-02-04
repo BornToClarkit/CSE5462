@@ -23,7 +23,7 @@ int main(int argc, char* argv[]){
 	hp = gethostbyname(gamma);
 	int src_addr_len;
 	int addr_len;
-	char buf[1000];		/* buffer for holding read data */
+	char buf[1040];		/* buffer for holding read data */
 	int *servermsg = NULL;
 	servermsg = malloc(sizeof(int));
 	if((local_sock = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
@@ -38,10 +38,10 @@ int main(int argc, char* argv[]){
     printf("tcpdServer local port: %d\n", ntohs(local_sin_addr.sin_port));
 
 	/* put all zeros in buffer (clear) */
-	bzero(buf,1000);
+	bzero(buf,1040);
 	//////////////////////////////////////////////////////////////////
 	
-    if((remote_sock = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
+  if((remote_sock = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
 	{
 		perror("error opening datagram socket");
 		exit(1);
@@ -50,6 +50,7 @@ int main(int argc, char* argv[]){
     remote_sin_addr.sin_family = AF_INET;
     remote_sin_addr.sin_port = htons(REMOTE_PORT);
     remote_sin_addr.sin_addr.s_addr = INADDR_ANY;
+
     if(bind(remote_sock, (struct sockaddr *)&remote_sin_addr, sizeof(remote_sin_addr)) < 0) {
 			perror("getting socket name");
 			exit(2);
@@ -57,21 +58,22 @@ int main(int argc, char* argv[]){
     addr_len=sizeof(struct sockaddr_in);
     /* Find assigned port value and print it for client to use */
     if(getsockname(remote_sock, (struct sockaddr *)&remote_sin_addr, &src_addr_len) < 0){
-			perror("getting sock name");
+			perror("getting sock name2");
 			exit(3);
     }
     printf("tcpdServer remote port: %d\n", ntohs(remote_sin_addr.sin_port));
 	/* put all zeros in buffer (clear) */
-	bzero(buf,1000);
-   
+	bzero(buf,1040);
+   struct Packet packet;
 	while(1){
 		printf("in loop\n");
 		
 		//if(recvfrom(local_sock, servermsg, 4, MSG_WAITALL, (struct sockaddr *)&src_addr , &src_addr_len)<0)
 		//{
 			printf("stuff:\n");
-			recvfrom(remote_sock, buf, 1040, 0, (struct sockaddr *)&src_addr , &src_addr_len);
-			sendto(local_sock,(char*)&buf,1040,0,(struct sockaddr *)&local_sin_addr,sizeof(local_sin_addr));
+			ssize_t pie =recvfrom(remote_sock, buf, 1040, 0, (struct sockaddr *)&src_addr , &src_addr_len);
+
+			sendto(local_sock,buf,pie,0,(struct sockaddr *)&local_sin_addr,sizeof(local_sin_addr));
 			
 		//}
 		

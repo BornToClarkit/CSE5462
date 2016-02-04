@@ -10,7 +10,7 @@
 #include <string.h>
 #include "CapitalFunctions.h"
 
-#define LOCAL_PORT 6666
+#define LOCAL_PORT 6650
 #define REMOTE_PORT 9980
 int main(int argc, char* argv[]){
 /*initialize socket connection in unix domain*/
@@ -21,7 +21,7 @@ int main(int argc, char* argv[]){
 	int src_addr_len;
 	int addr_len;
 	struct hostent *hp;
-	char buf[1000];		/* buffer for holding read data */
+	char buf[1040];		/* buffer for holding read data */
 	if((local_sock = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
 	{
 		perror("error opening datagram socket");
@@ -43,7 +43,7 @@ int main(int argc, char* argv[]){
     }
     printf("tcpdClient local port: %d\n", ntohs(local_sin_addr.sin_port));
 	/* put all zeros in buffer (clear) */
-	bzero(buf,1000);
+	bzero(buf,1040);
 	/////////////////////////////////////////////////////////////////////////////////
 	if((remote_sock = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
 	{
@@ -59,7 +59,7 @@ int main(int argc, char* argv[]){
     
     printf("tcpdClient remote port: %d\n", ntohs(remote_sin_addr.sin_port));
 	/* put all zeros in buffer (clear) */
-	bzero(buf,1000);
+	bzero(buf,1040);
 	
 	//struct sockaddr_in tosend;
 	//tosend.sin_family = AF_INET;
@@ -74,8 +74,8 @@ int main(int argc, char* argv[]){
 	
 	while(1){
 		printf("in loop\n");
-		recvfrom(local_sock, buf, 1000, 0, (struct sockaddr *)&src_addr , &src_addr_len);
+		ssize_t pie = recvfrom(local_sock, buf, 1040, 0, (struct sockaddr *)&src_addr , &src_addr_len);
 		//send to troll
-		sendto(remote_sock, (char*)&buf, 1000, 0, (struct sockaddr *)&remote_sin_addr, sizeof(remote_sin_addr));
+		sendto(remote_sock, buf, pie, 0, (struct sockaddr *)&remote_sin_addr, sizeof(remote_sin_addr));
 	}
 }

@@ -16,9 +16,11 @@ ssize_t RECV(int socket, void *buffer, size_t length, int flags)
 {
 	struct sockaddr_in src_addr;
 	int src_addr_len;
+	struct Packet packet;
 
-	ssize_t pie =recvfrom(socket, buffer, length+sizeof(struct sockaddr_in), flags, (struct sockaddr *)&src_addr , &src_addr_len);
-	printf("pie is good\n");
+	ssize_t pie =recvfrom(socket, buffer, length, flags, (struct sockaddr *)&src_addr , &src_addr_len);
+	
+	pie = pie - 16;
 	return pie;
 }
 
@@ -33,12 +35,11 @@ ssize_t SEND(int socket, const void*buffer, size_t length, int flags)
 	h2 = gethostbyname("beta");
 	bcopy((void *)h2->h_addr, (void *)&daemon.sin_addr, h2->h_length);
 	daemon.sin_family = AF_INET;
-	if((daemon.sin_port = htons(6666)) < 0)
+	if((daemon.sin_port = htons(6650)) < 0)
 	{
 		exit(1);
 	}
-	//memcpy(&packet,buffer,length);
-	//printf("stuff: %d",ntohs(atoi(packet.buff)));
+
 	
 	ssize_t pie =sendto(socket,buffer,length,0,(struct sockaddr*)&daemon,sizeof(daemon));
 

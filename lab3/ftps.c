@@ -44,11 +44,13 @@ main(int argc, char* argv[])
  	int sock;		/* initial socket descriptor */
 	struct sockaddr_in sin_addr;		/* structure for socket name setup */
 	int addr_len;
-	char buf[1000];		/* buffer for holding read data */
-	int size_in_network[4];
-	long long file_size;
-	char name[20];
+	char buf[1040];		/* buffer for holding read data */
+	int size_in_network[20];
+	int file_size;
+	char size2[4];
+	char name[40];
 	char dest[27];
+	int size;
 	int received = 0;
 	int total_recv = 0;
 	//printf("TCP server waiting for remote connection from clients ...\n");
@@ -78,23 +80,24 @@ main(int argc, char* argv[])
 	/* put all zeros in buffer (clear) */
 	bzero(buf,1000);
 	/* read from msgsock and place in buf */
-	if(RECV(sock,size_in_network,4 + sizeof(struct sockaddr_in),MSG_WAITALL)<0)
+	if(RECV(sock,name,40,MSG_WAITALL)<0)
 	{
 		perror("error reading on datagram socket");
 		exit(1);
 	}
+
 	struct Packet packet;
-	bcopy(size_in_network,&packet,sizeof(size_in_network));
-	
-	printf("pie\n");
-	file_size = ntohl(*packet.buff);
-	printf("Server receives filesize: %d\n",file_size);
-	if(RECV(sock,name,20 + sizeof(struct sockaddr_in),MSG_WAITALL)<0)
+	memcpy(&packet,name,1040);
+	memcpy(&size,packet.buff,4);
+	size = ntohl(size);
+	printf("Server receives filesize: %d\n",size);
+	/*if(RECV(sock,name,20 + sizeof(struct sockaddr_in),MSG_WAITALL)<0)
 	{
 		perror("error reading on stream socket");
 		exit(1);
 	}
-	printf("Server receives filename: %s\n",name);
+	*/
+	printf("Server receives filename: %s\n",packet.buff+4);
 	struct stat st;		/* used to determine if directory exists */			
 	strcpy(dest,"sub/");
 	if(stat(dest, &st)!=0)
@@ -106,7 +109,7 @@ main(int argc, char* argv[])
 			exit(1);
 		}
 	}
-	char *location =strcat(dest,name);
+	char *location =strcat(dest,packet.buff+4);
 	FILE * out = fopen(location,"wb");
 	if(!out)
 	{
@@ -114,19 +117,26 @@ main(int argc, char* argv[])
 		exit(1);
 		
 	}
+	printf("size of buffer: %d\n",sizeof(buf));
 	printf("File saved to this location: %s\n",location);
 	/* put all zeros in buffer (clear) */
-	bzero(buf,1000);
+	bzero(buf,1040);
+	struct Packet pac;
 	/* read from msgsock and place in buf */
-	while(total_recv < file_size)
+	while(total_recv < size)
 	{
-		received =RECV(sock, buf, 1024,0);
+		received =RECV(sock, buf, 1040,0);
+		memcpy(&pac,buf,1040);
 		total_recv += received;
-		if((fwrite(buf,1,received,out))!= received){
+		
+		printf("stuff: %d\n",received);
+		if((fwrite(pac.buff,1,received,out))!= received){
 			perror("ERROR writing to file");
 			exit(1);
 		}
+		printf("total received: %d\n",total_recv);
 	}
+	
 	/* close all connections and remove socket file */
 	close(sock);
 	fclose(out);
