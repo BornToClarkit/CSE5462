@@ -5,12 +5,13 @@ OBJCLI = ftpc.o CapitalFunctions.o
 OBJSRV = ftps.o	CapitalFunctions.o
 OBJTCPD_CLIENT = tcpdClient.o CapitalFunctions.o
 OBJTCPD_SERVER = tcpdServer.o CapitalFunctions.o
+OBJ_TIMER = Delta_list.c
 CFLAGS =
 DEPS = CapitalFunctions.h
 # setup for system
 LIBS =
 
-all: ftpc ftps tcpdClient tcpdServer
+all: ftpc ftps tcpdClient tcpdServer timer-process
 
 %.o: %.c $(DEPS)
 	$(CC) $(CFLAGS) -c -o $@ $<
@@ -26,7 +27,10 @@ tcpdClient:	$(OBJTCPD_CLIENT)
 	
 tcpdServer: $(OBJTCPD_SERVER)
 	$(CC) $(CFLAGS) -o $@ $^
+	
+timer-process: $(OBJ_TIMER)
+	$(CC) $(CFLAGS) -o $@ $^
 
 clean:
-	rm ftpc ftps tcpdClient tcpdServer CapitalFunctions.o ftpc.o ftps.o tcpdClient.o tcpdServer.o
+	rm ftpc ftps tcpdClient tcpdServer CapitalFunctions.o ftpc.o ftps.o tcpdClient.o tcpdServer.o timer-process
 
