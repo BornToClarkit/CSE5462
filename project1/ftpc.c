@@ -1,5 +1,4 @@
-/* client.c using TCP */
-/* Client for connecting to Internet stream server waiting on port 1040 */
+/* client.c using UDP */
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -10,6 +9,12 @@
 #include<limits.h>
 #include <strings.h>
 #include <string.h>
+#include "CapitalFunctions.h"
+//client
+
+/*  Connor Clark
+	Curtis Holton
+*/
 
 
 long check_args(int argc, char *argv[]){
@@ -25,7 +30,7 @@ long check_args(int argc, char *argv[]){
 	else 
 	{
 		printf("Invalid number of arguments or an argument was null\ncommand should look like this:\n");
-		printf("ftpc <remote-IP> <port-number> <local-file-to-transfer> \n");
+		printf("ftpc <remote-host> <port-number> <local-file-to-transfer> \n");
 		return -1;
 	}
 }
@@ -51,16 +56,25 @@ int get_port(char *argv[]){
 	}
 }
 
+//used to find the size of the file
+int get_file_size(FILE *fp){
+	fseek(fp, 0, SEEK_END);
+	int size = ftell(fp);
+	fseek(fp, 0, SEEK_SET);
+	return size;
+}
 
+/* client program called with host name and port where server is run */
 main(int argc, char *argv[])
 {
 	int sock;                     /* initial socket descriptor */
 	int rval;                    /* returned value from a read */
 	struct sockaddr_in sin_addr; /* structure for socket name 
                                  * setup */
-	char buf[1024];
+  struct sockaddr_in to_send;
+  struct Packet packet;
+	char buf[1040];
 	struct hostent *hp;
-	printf("test\n");
 	int pie;
 	int *file_size = NULL;
 	file_size = malloc(sizeof(int));
@@ -79,7 +93,7 @@ main(int argc, char *argv[])
 	}
 	*file_size = get_file_size(ifp);
 	/* initialize socket connection in unix domain */
-	if((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+	if((sock = SOCKET(AF_INET, SOCK_STREAM, 0)) < 0)
 	{
 		perror("error opening socket");
 		exit(1);
@@ -91,17 +105,47 @@ main(int argc, char *argv[])
 		exit(2);
 	}
 	/* construct name of socket to send to */
-	bcopy((void *)hp->h_addr, (void *)&sin_addr.sin_addr, hp->h_length);
-	sin_addr.sin_family = AF_INET;
-	if((sin_addr.sin_port = htons(get_port(argv))) < 0)
+	bcopy((void *)hp->h_addr, (void *)&to_send.sin_addr, hp->h_length);
+	to_send.sin_family = htons(AF_INET);
+	if((to_send.sin_port = htons(get_port(argv))) < 0)
 	{
 		exit(1);
 	}
+	//
 	/* establish connection with server */
-	if(connect(sock, (struct sockaddr *)&sin_addr, sizeof(struct sockaddr_in)) < 0) 
+	//copy file size into buffer
+	*file_size = htonl(*file_size);
+	memcpy(packet.buff, file_size,4);
+	memcpy(file_size,packet.buff,4);
+
+	//copy file name into buffer
+	memcpy(packet.buff + sizeof(int), file_name ,20);
+	memcpy(file_name,packet.buff+4,20);
+	/* write buf to sock */	
+	packet.address = to_send;
+	printf("port:%d\n",ntohs(packet.address.sin_port));
+	if(SEND(sock,&packet,40,0) < 0) 
 	{
-		close(sock);
-		perror("error connecting stream socket");
+		perror("error writing on stream socket");
 		exit(1);
 	}
+	
+	printf("Client sends file size: %i and filename: %s\n", ntohl(*file_size), file_name);
+	int sent = 0;
+	int total_sent = 0;
+	while(total_sent < ntohl(*file_size)){
+		sent = fread(packet.buff,1,1024,ifp);
+		
+		total_sent += sent;
+		if(SEND(sock,&packet,sent+16,0)< 0) 
+		{
+			perror("error writing on stream socket");
+			exit(1);
+		}
+		usleep(1000);
+	}
+	printf("total sent: %d\n",total_sent);
+	printf("Client done sending file\n");
+	free(file_size);
+	fclose(ifp);
 }

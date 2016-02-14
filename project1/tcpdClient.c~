@@ -64,7 +64,6 @@ int main(int argc, char* argv[]){
 	while(1){
 		ssize_t pie = recvfrom(local_sock, buf, 1040, 0, (struct sockaddr *)&src_addr , &src_addr_len);
 		//send to troll
-		printf("Sent: %d\n",pie);
 		sendto(remote_sock, buf, pie, 0, (struct sockaddr *)&remote_sin_addr, sizeof(remote_sin_addr));
 		printf("sent packet\n");
 	}

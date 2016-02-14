@@ -133,7 +133,7 @@ main(int argc, char* argv[])
 			perror("ERROR writing to file");
 			exit(1);
 		}
-		//printf("total received: %d\n",total_recv);
+		printf("total received: %d\n",total_recv);
 	}
 	printf("file received\n");
 	/* close all connections and remove socket file */

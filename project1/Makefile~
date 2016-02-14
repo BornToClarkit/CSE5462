@@ -28,5 +28,5 @@ tcpdServer: $(OBJTCPD_SERVER)
 	$(CC) $(CFLAGS) -o $@ $^
 
 clean:
-	rm ftpc ftps tcpdClient tcpdServer CapitalFunctions.o ftpc.o ftps.o tcpdClient.o tcpdServer.o
+	rm ftpc ftps tcpdClient tcpdServer 
 

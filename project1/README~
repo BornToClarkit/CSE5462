@@ -15,7 +15,7 @@ the client must be started on beta
 
 troll can be started by using the command
 
-troll 9980 -x0 -s0 (note must be on beta)
+troll 9980 -x0 -s0
 
 To start the server: (note must be on gamma)
 	ftps 6666
@@ -23,10 +23,10 @@ To start the server: (note must be on gamma)
 To start the Client: (note must be on beta)
 	ftpc gamma 1040 <file-to-transfer>
 	
-To start the tcpdClient (note must be on beta)
+To start the tcpdClient
 	tcpdClient
 	
-To start the tcpdServer (note must be on gamma)
+To start the tcpdServer
 	tcpdServer
 	
 	

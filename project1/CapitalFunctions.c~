@@ -36,8 +36,8 @@ ssize_t SEND(int socket, const void*buffer, size_t length, int flags)
 	{
 		exit(1);
 	}
-	ssize_t sent =sendto(socket,buffer,length,0,(struct sockaddr*)&daemon,sizeof(daemon));
-	return sent;
+	ssize_t pie =sendto(socket,buffer,length,0,(struct sockaddr*)&daemon,sizeof(daemon));
+	return pie;
 }
 
 int CONNECT(void)
