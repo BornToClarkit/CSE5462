@@ -12,18 +12,14 @@
 
 #define LOCAL_PORT  7750
 
-
-
-//returns pointer to new node;
-struct node* make_node(struct timeval delta_time, int port, char* info){
+struct node* make_node(char * buf){
   struct node* tmp;
   tmp = malloc(sizeof(struct node));
-  tmp->delta_time = delta_time;
-  tmp->port = port;
-  memcpy(tmp->info, info, INFO_SIZE);
-  tmp->next = NULL;
+  memcpy(tmp, buf, sizeof(struct node));
   return tmp;
 }
+
+
 //inserts node, may change the head node
 void insert(struct node** insert_node, struct node** head){
   struct timeval insert_node_time = (**insert_node).delta_time;  //for easy access to time
@@ -105,14 +101,16 @@ void delete(struct node** delete_node, struct node** head){
     return;
   }
   while(iterator_node->next != NULL){
+    if(iterator_node-> seq == (**delete_node).seq){
 
+    }
   }
 
 }
 
 void print_list(struct node* iterator_node){
   while(iterator_node != NULL){
-    printf("%ld.%06ld\n", iterator_node->delta_time.tv_sec, iterator_node->delta_time.tv_usec);
+    printf("%ld.%06ld, seq_num:%i\n", iterator_node->delta_time.tv_sec, iterator_node->delta_time.tv_usec, iterator_node->seq);
     iterator_node = iterator_node->next;
   }
 }
@@ -122,9 +120,6 @@ int main(int argc, char *argv[]) {
   int local_sock;	/* initial socket descriptor */
   struct sockaddr_in local_sin_addr;		/* structure for socket name setup */
   struct sockaddr_in src_addr;
-  // struct hostent *hp;
-  // char gamma[] = "gamma";
-  // hp = gethostbyname(gamma);
   int src_addr_len;
   int addr_len;
   char buf[sizeof(struct node)];		/* buffer for holding read data */
@@ -136,9 +131,10 @@ int main(int argc, char *argv[]) {
     exit(1);
   }
   /* create name with parameters and bind name to socket */
+  bzero(&local_sin_addr, sizeof(local_sin_addr));
   local_sin_addr.sin_family = AF_INET;
   local_sin_addr.sin_port = htons(LOCAL_PORT);
-  local_sin_addr.sin_addr.s_addr = INADDR_ANY;
+  local_sin_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
   if(bind(local_sock, (struct sockaddr *)&local_sin_addr, sizeof(local_sin_addr)) < 0) {
     perror("getting socket name");
@@ -150,28 +146,46 @@ int main(int argc, char *argv[]) {
     perror("getting sock name2");
     exit(3);
   }
-  printf("tcpdServer remote port: %d\n", ntohs(local_sin_addr.sin_port));
+  printf("timer-process local port: %d\n", ntohs(local_sin_addr.sin_port));
   /* put all zeros in buffer (clear) */
   bzero(buf,sizeof(struct node));
   struct node* head = NULL;
-  head = malloc(sizeof(struct node));
-  struct timeval t1;
-  t1.tv_sec = 4;
-  t1.tv_usec = 0;
-  head->delta_time = t1;
   struct node* blah = NULL;
   blah = malloc(sizeof(struct node));
+  //construct head node
   ssize_t pie =recvfrom(local_sock, buf, sizeof(struct node), 0, (struct sockaddr *)&src_addr , &src_addr_len);
-  printf("received size: %d\n", pie);
-  memcpy(blah, buf, sizeof(struct node));
-  printf("Before insert\n");
-  print_list(head);
-  insert(&blah, &head);
+  head = make_node(buf);
   printf("After insert\n");
   print_list(head);
+  fd_set set;
+  struct timeval t;
+  int rv = 0;
+  while(1){
+    t.tv_sec = 0;
+    t.tv_usec = 50000;
+    FD_ZERO(&set);
+    FD_SET(local_sock, &set);
+    if (select(local_sock + 1, &set, NULL, NULL, &t) <0) {
+      printf("\nSelect thrown an exception\n");
+      return 0;
+    }
+    if (FD_ISSET(local_sock, &set)){
+      ssize_t pie =recvfrom(local_sock, buf, sizeof(struct node), 0, (struct sockaddr *)&src_addr , &src_addr_len);
+      printf("received size: %d\n", pie);
+      blah = make_node(buf);
+      printf("Before insert\n");
+      print_list(head);
+      insert(&blah, &head);
+      printf("After insert\n");
+      print_list(head);
+    }
+    else {
+      printf("Timeout ");
+      fflush(stdout);
+    }
+  }
   free(head);
   free(blah);
-
 
 
 
