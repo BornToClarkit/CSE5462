@@ -165,8 +165,8 @@ int main(int argc, char *argv[]) {
     t.tv_usec = 50000;
     FD_ZERO(&set);
     FD_SET(local_sock, &set);
-    if (select(local_sock + 1, &set, NULL, NULL, &t) <0) {
-      printf("\nSelect thrown an exception\n");
+    if (select(local_sock + 1, &set, NULL, NULL, &head->delta_time) <0) {
+      printf("\nSelect threw an exception\n");
       return 0;
     }
     if (FD_ISSET(local_sock, &set)){
@@ -180,7 +180,14 @@ int main(int argc, char *argv[]) {
       print_list(head);
     }
     else {
-      printf("Timeout ");
+      printf("Timeout next timer in");
+      if(head->next != NULL){
+        printf("%ld.%06ld\n", head->next->delta_time.tv_sec, head->next->delta_time.tv_usec);
+        print_list(head);
+        head = head->next;
+      }
+
+      // subtract the timeout time from the head timeval
       fflush(stdout);
     }
   }
