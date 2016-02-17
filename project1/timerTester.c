@@ -14,7 +14,7 @@
 #define LOCAL_PORT 6650
 #define SEND_TO_PORT 7750
 
-struct node* make_node(struct timeval delta_time, int port, int sequence);
+struct node* make_node(struct timeval delta_time, int port, int sequence, int flag);
 void startTimer(double time, int sequence);
 void cancelTimer(int sequence);
 
@@ -68,12 +68,13 @@ int main(int argc, char *argv[]){
 }
 
 //returns pointer to new node;
-struct node* make_node(struct timeval delta_time, int port, int sequence){
+struct node* make_node(struct timeval delta_time, int port, int sequence, int flag){
   struct node* tmp;
   tmp = malloc(sizeof(struct node));
   tmp->delta_time = delta_time;
   tmp->port = port;
-  tmp->seq = sequence;
+  tmp->info[0] = flag;
+  memcpy(tmp->info + 1, &sequence, sizeof(int));
   tmp->next = NULL;
   return tmp;
 }
@@ -85,7 +86,7 @@ void startTimer(double time, int sequence){
   struct timeval time1;
   time1.tv_sec = sec;
   time1.tv_usec = usec;
-  struct node* timer = make_node(time1, LOCAL_PORT, sequence);
+  struct node* timer = make_node(time1, LOCAL_PORT, sequence, 1);
   memcpy(buf, timer, sizeof(struct node));
   sendto(local_sock, buf, sizeof(struct node) , 0, (struct sockaddr *)&send_to_sin_addr, sizeof(send_to_sin_addr));
 }
@@ -95,7 +96,7 @@ void cancelTimer(int sequence){
   struct timeval time1;
   time1.tv_sec = 0;
   time1.tv_usec = 0;
-  struct node* timer = make_node(time1, LOCAL_PORT, sequence);
+  struct node* timer = make_node(time1, LOCAL_PORT, sequence, 0);
   memcpy(buf, timer, sizeof(struct node));
   sendto(local_sock, buf, sizeof(struct node) , 0, (struct sockaddr *)&send_to_sin_addr, sizeof(send_to_sin_addr));
 }

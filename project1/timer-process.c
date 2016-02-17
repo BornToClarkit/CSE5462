@@ -92,25 +92,32 @@ void insert(struct node** insert_node, struct node** head){
 }
 
 void delete(struct node** delete_node, struct node** head){
+  int delete_seq_num;
+  memcpy(&delete_seq_num, (**delete_node).info+1, sizeof(int));
+  int iterator_seq_num;
+  memcpy(&iterator_seq_num, (**head).info+1, sizeof(int));
   struct node* iterator_node = *head;
   printf("deleting this node: ");
   printf("%ld.%06ld\n", (**delete_node).delta_time.tv_sec, (**delete_node).delta_time.tv_usec);
   //if delete node is head node
-  if(*delete_node == *head){
+  if(delete_seq_num == iterator_seq_num){
     *head = (**head).next;
     return;
   }
   while(iterator_node->next != NULL){
-    if(iterator_node-> seq == (**delete_node).seq){
+    memcpy(&iterator_seq_num, iterator_node->info+1, sizeof(int));
+    if(iterator_seq_num == delete_seq_num){
 
     }
   }
-
 }
+
 
 void print_list(struct node* iterator_node){
   while(iterator_node != NULL){
-    printf("%ld.%06ld, seq_num:%i\n", iterator_node->delta_time.tv_sec, iterator_node->delta_time.tv_usec, iterator_node->seq);
+    int seq_num;
+    memcpy(&seq_num, iterator_node->info+1, sizeof(int));
+    printf("%ld.%06ld, seq_num:%i\n", iterator_node->delta_time.tv_sec, iterator_node->delta_time.tv_usec, seq_num);
     iterator_node = iterator_node->next;
   }
 }
@@ -150,19 +157,9 @@ int main(int argc, char *argv[]) {
   /* put all zeros in buffer (clear) */
   bzero(buf,sizeof(struct node));
   struct node* head = NULL;
-  struct node* blah = NULL;
-  blah = malloc(sizeof(struct node));
-  //construct head node
-  ssize_t pie =recvfrom(local_sock, buf, sizeof(struct node), 0, (struct sockaddr *)&src_addr , &src_addr_len);
-  head = make_node(buf);
-  printf("After insert\n");
-  print_list(head);
+  struct node* node_recv = NULL;
   fd_set set;
-  struct timeval t;
-  int rv = 0;
   while(1){
-    t.tv_sec = 0;
-    t.tv_usec = 50000;
     FD_ZERO(&set);
     FD_SET(local_sock, &set);
     if (select(local_sock + 1, &set, NULL, NULL, &head->delta_time) <0) {
@@ -170,34 +167,43 @@ int main(int argc, char *argv[]) {
       return 0;
     }
     if (FD_ISSET(local_sock, &set)){
-      ssize_t pie =recvfrom(local_sock, buf, sizeof(struct node), 0, (struct sockaddr *)&src_addr , &src_addr_len);
-      printf("received size: %d\n", pie);
-      blah = make_node(buf);
-      printf("Before insert\n");
-      print_list(head);
-      insert(&blah, &head);
+      ssize_t recv =recvfrom(local_sock, buf, sizeof(struct node), 0, (struct sockaddr *)&src_addr , &src_addr_len);
+      if(head == NULL){
+        struct node* tmp = make_node(buf);
+        if(tmp->info[0] == 1){
+          printf("Before insert: list is empty\n");
+          head = make_node(buf);
+        }
+      }
+      else{
+        node_recv = make_node(buf);
+        //insert
+        if(node_recv->info[0]==1){
+          printf("Before insert\n");
+          print_list(head);
+          insert(&node_recv, &head);
+        }//delete
+        else if(node_recv->info[0]==0){
+          printf("Before delete\n");
+          print_list(head);
+          delete(&node_recv, &head);
+        }
+      }
       printf("After insert\n");
       print_list(head);
     }
     else {
-      printf("Timeout next timer in");
+      int seq_num;
+      memcpy(&seq_num, head->info+1, sizeof(int));
+      printf("Timeout, timer with seq_num: %i, next timer in: ", seq_num);
       if(head->next != NULL){
         printf("%ld.%06ld\n", head->next->delta_time.tv_sec, head->next->delta_time.tv_usec);
-        print_list(head);
         head = head->next;
+        print_list(head);
       }
-
-      // subtract the timeout time from the head timeval
       fflush(stdout);
     }
   }
-  free(head);
-  free(blah);
-
-
-
-
-
   // struct node* head = NULL;
   // struct node* blah = NULL;
   // struct node* blah2 = NULL;
