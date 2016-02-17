@@ -56,17 +56,25 @@ int main(int argc, char *argv[]){
   /* create name with parameters and bind name to socket */
   send_to_sin_addr.sin_family = AF_INET;
   send_to_sin_addr.sin_port = htons(SEND_TO_PORT);
-  char beta[] = "COMPUTRON";
+  char beta[] = "beta";
   hp = gethostbyname(beta);
   bcopy((void *)hp->h_addr, (void *)&send_to_sin_addr.sin_addr, hp->h_length);
   printf("timer test send_to_port : %d\n", ntohs(send_to_sin_addr.sin_port));
 
   startTimer(9, 1);
+  sleep(1);
   startTimer(17,2);
+  sleep(1);
   startTimer(1, 3);
+  sleep(1);
   startTimer(3, 4);
+  sleep(1);
+  startTimer(4,5);
+  sleep(1);
   cancelTimer(2);
+  sleep(1);
   cancelTimer(4);
+  cancelTimer(100);
 }
 
 //returns pointer to new node;
@@ -90,6 +98,7 @@ void startTimer(double time, int sequence){
   time1.tv_usec = usec;
   struct node* timer = make_node(time1, LOCAL_PORT, sequence, 1);
   memcpy(buf, timer, sizeof(struct node));
+  printf("Starting timer with time: %ld.%06ld, and seq_num: %i\n", timer->delta_time.tv_sec, timer->delta_time.tv_usec, sequence);
   sendto(local_sock, buf, sizeof(struct node) , 0, (struct sockaddr *)&send_to_sin_addr, sizeof(send_to_sin_addr));
 }
 //constructs a timer with 0.0 time and sends to timer-process
@@ -100,5 +109,6 @@ void cancelTimer(int sequence){
   time1.tv_usec = 0;
   struct node* timer = make_node(time1, LOCAL_PORT, sequence, 0);
   memcpy(buf, timer, sizeof(struct node));
+  printf("Cancelling timer with seq_num: %i\n", sequence);
   sendto(local_sock, buf, sizeof(struct node) , 0, (struct sockaddr *)&send_to_sin_addr, sizeof(send_to_sin_addr));
 }

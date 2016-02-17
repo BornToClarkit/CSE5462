@@ -120,6 +120,10 @@ void delete(struct node** delete_node, struct node** head){
 
 
 void print_list(struct node* iterator_node){
+  if(iterator_node == NULL){
+    printf("List is empty\n");
+    return;
+  }
   while(iterator_node != NULL){
     int seq_num;
     memcpy(&seq_num, iterator_node->info+1, sizeof(int));
@@ -136,8 +140,9 @@ int main(int argc, char *argv[]) {
   int src_addr_len;
   int addr_len;
   char buf[sizeof(struct node)];		/* buffer for holding read data */
-  int *servermsg = NULL;
-  servermsg = malloc(sizeof(int));
+  struct timeval zero_time;
+  zero_time.tv_sec = 0;
+  zero_time.tv_usec = 0;
   if((local_sock = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
   {
     perror("error opening datagram socket");
@@ -173,11 +178,12 @@ int main(int argc, char *argv[]) {
       return 0;
     }
     if (FD_ISSET(local_sock, &set)){
-      ssize_t recv =recvfrom(local_sock, buf, sizeof(struct node), 0, (struct sockaddr *)&src_addr , &src_addr_len);
+      recvfrom(local_sock, buf, sizeof(struct node), 0, (struct sockaddr *)&src_addr , &src_addr_len);
       if(head == NULL){
         struct node* tmp = make_node(buf);
         if(tmp->info[0] == 1){
-          printf("Before insert: list is empty\n");
+          printf("Before insert: \n");
+          print_list(head);
           head = make_node(buf);
           printf("After insert\n");
         }
@@ -198,20 +204,20 @@ int main(int argc, char *argv[]) {
           printf("After delete\n");
         }
       }
-      print_list(head);
-      printf("/////////////////////////////////////////////////////////////////////////////\n");
+
     }
-    else {
-      int seq_num;
-      memcpy(&seq_num, head->info+1, sizeof(int));
-      printf("Timeout, timer with seq_num: %i, next timer in: ", seq_num);
-      if(head->next != NULL){
-        printf("%ld.%06ld\n", head->next->delta_time.tv_sec, head->next->delta_time.tv_usec);
-        head = head->next;
-        print_list(head);
-      }
-      fflush(stdout);
+    else if (timercmp(&zero_time, &head->delta_time, ==)&& head!=NULL){
+        int seq_num;
+        memcpy(&seq_num, head->info+1, sizeof(int));
+        printf("Timer with seq_num: %i has timed out. New list:\n", seq_num);
+        if(head->next != NULL){
+          head = head->next;
+        }
+        else{
+          head = NULL;
+        }
     }
+    print_list(head);
   }
   // struct node* head = NULL;
   // struct node* blah = NULL;
