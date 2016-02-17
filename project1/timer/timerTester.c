@@ -55,7 +55,7 @@ int main(int argc, char *argv[]){
   /* create name with parameters and bind name to socket */
   send_to_sin_addr.sin_family = AF_INET;
   send_to_sin_addr.sin_port = htons(SEND_TO_PORT);
-  char beta[] = "COMPUTRON";
+  char beta[] = "beta";
   hp = gethostbyname(beta);
   bcopy((void *)hp->h_addr, (void *)&send_to_sin_addr.sin_addr, hp->h_length);
   printf("timer test send_to_port : %d\n", ntohs(send_to_sin_addr.sin_port));
