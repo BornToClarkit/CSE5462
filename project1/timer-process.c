@@ -25,6 +25,8 @@ void insert(struct node** insert_node, struct node** head){
   struct timeval insert_node_time = (**insert_node).delta_time;  //for easy access to time
   struct timeval head_time = (**head).delta_time;  //for easy access to time
   struct node* iterator_node = *head;
+  int insert_seq_num;
+  memcpy(&insert_seq_num, (**insert_node).info + 1, sizeof(int));
   struct timeval sum;
   sum.tv_sec = 0;
   sum.tv_usec = 0;
@@ -32,7 +34,8 @@ void insert(struct node** insert_node, struct node** head){
   prev_sum.tv_sec = 0;
   prev_sum.tv_usec = 0;
   printf("inserting this node: ");
-  printf("%ld.%06ld\n", insert_node_time.tv_sec, insert_node_time.tv_usec);
+  printf("%ld.%06ld ", insert_node_time.tv_sec, insert_node_time.tv_usec);
+  printf("seq_num: %i\n", insert_seq_num);
   //insert before head
   if(timercmp(&insert_node_time, &head_time, <)){
     (**insert_node).next = *head;
@@ -97,18 +100,21 @@ void delete(struct node** delete_node, struct node** head){
   int iterator_seq_num;
   memcpy(&iterator_seq_num, (**head).info+1, sizeof(int));
   struct node* iterator_node = *head;
-  printf("deleting this node: ");
-  printf("%ld.%06ld\n", (**delete_node).delta_time.tv_sec, (**delete_node).delta_time.tv_usec);
-  //if delete node is head node
+  printf("deleting the node with seq_num: %i\n", delete_seq_num);
   if(delete_seq_num == iterator_seq_num){
     *head = (**head).next;
     return;
   }
   while(iterator_node->next != NULL){
-    memcpy(&iterator_seq_num, iterator_node->info+1, sizeof(int));
+    memcpy(&iterator_seq_num, iterator_node->next->info+1, sizeof(int));
     if(iterator_seq_num == delete_seq_num){
-
+      if(iterator_node->next->next != NULL){
+        timeradd(&iterator_node->next->delta_time, &iterator_node->next->next->delta_time, &iterator_node->next->next->delta_time);
+      }
+      iterator_node->next= iterator_node->next->next;
+      return;
     }
+    iterator_node = iterator_node->next;
   }
 }
 
@@ -117,7 +123,7 @@ void print_list(struct node* iterator_node){
   while(iterator_node != NULL){
     int seq_num;
     memcpy(&seq_num, iterator_node->info+1, sizeof(int));
-    printf("%ld.%06ld, seq_num:%i\n", iterator_node->delta_time.tv_sec, iterator_node->delta_time.tv_usec, seq_num);
+    printf("  %ld.%06ld, seq_num:%i\n", iterator_node->delta_time.tv_sec, iterator_node->delta_time.tv_usec, seq_num);
     iterator_node = iterator_node->next;
   }
 }
@@ -173,6 +179,7 @@ int main(int argc, char *argv[]) {
         if(tmp->info[0] == 1){
           printf("Before insert: list is empty\n");
           head = make_node(buf);
+          printf("After insert\n");
         }
       }
       else{
@@ -182,15 +189,17 @@ int main(int argc, char *argv[]) {
           printf("Before insert\n");
           print_list(head);
           insert(&node_recv, &head);
+          printf("After insert\n");
         }//delete
         else if(node_recv->info[0]==0){
           printf("Before delete\n");
           print_list(head);
           delete(&node_recv, &head);
+          printf("After delete\n");
         }
       }
-      printf("After insert\n");
       print_list(head);
+      printf("/////////////////////////////////////////////////////////////////////////////\n");
     }
     else {
       int seq_num;

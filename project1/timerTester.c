@@ -65,6 +65,8 @@ int main(int argc, char *argv[]){
   startTimer(17,2);
   startTimer(1, 3);
   startTimer(3, 4);
+  cancelTimer(2);
+  cancelTimer(4);
 }
 
 //returns pointer to new node;
