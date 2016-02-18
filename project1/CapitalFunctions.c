@@ -8,8 +8,10 @@
 #include<limits.h>
 #include <strings.h>
 #include <string.h>
+#include <linux/tcp.h>
 struct Packet{
 	struct sockaddr_in address;
+	struct tcphdr TCPHeader;
 	char buff[1024];
 };
 ssize_t RECV(int socket, void *buffer, size_t length, int flags)
@@ -18,7 +20,7 @@ ssize_t RECV(int socket, void *buffer, size_t length, int flags)
 	int src_addr_len;
 	struct Packet packet;
 	ssize_t pie =recvfrom(socket, buffer, length, flags, (struct sockaddr *)&src_addr , &src_addr_len);
-	pie = pie - 16;
+	pie = pie - 16-20;
 	return pie;
 }
 

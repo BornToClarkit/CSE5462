@@ -8,6 +8,7 @@
 #include <sys/stat.h>
 #include<netinet/in.h>
 #include<string.h>
+#include <linux/tcp.h>
 #include "CapitalFunctions.h"
 //server
 
@@ -44,7 +45,7 @@ main(int argc, char* argv[])
  	int sock;		/* initial socket descriptor */
 	struct sockaddr_in sin_addr;		/* structure for socket name setup */
 	int addr_len;
-	char buf[1040];		/* buffer for holding read data */
+	char buf[1060];		/* buffer for holding read data */
 	int size_in_network[20];
 	int file_size;
 	char size2[4];
@@ -78,7 +79,7 @@ main(int argc, char* argv[])
     }
     printf("Server waiting on port # %d\n", ntohs(sin_addr.sin_port));
 	/* put all zeros in buffer (clear) */
-	bzero(buf,1000);
+	bzero(buf,1060);
 	/* read from msgsock and place in buf */
 	if(RECV(sock,name,40,MSG_WAITALL)<0)
 	{
@@ -87,7 +88,7 @@ main(int argc, char* argv[])
 	}
 
 	struct Packet packet;
-	memcpy(&packet,name,1040);
+	memcpy(&packet,name,1060);
 	memcpy(&size,packet.buff,4);
 	size = ntohl(size);
 	printf("Server receives filesize: %d\n",size);
@@ -120,20 +121,20 @@ main(int argc, char* argv[])
 	printf("size of buffer: %d\n",sizeof(buf));
 	printf("File saved to this location: %s\n",location);
 	/* put all zeros in buffer (clear) */
-	bzero(buf,1040);
+	bzero(buf,1060);
 	struct Packet pac;
 	/* read from msgsock and place in buf */
 	printf("size: %i\n", size);
 	while(total_recv < size)
 	{
-		received =RECV(sock, buf, 1040,0);
-		memcpy(&pac,buf,1040);
+		received =RECV(sock, buf, 1060,0);
+		memcpy(&pac,buf,1060);
 		total_recv += received;
 		if((fwrite(pac.buff,1,received,out))!= received){
 			perror("ERROR writing to file");
 			exit(1);
 		}
-		printf("total received: %d\n",total_recv);
+		//printf("total received: %d\n",total_recv);
 	}
 	printf("file received\n");
 	/* close all connections and remove socket file */

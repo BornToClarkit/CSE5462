@@ -1,6 +1,6 @@
 struct Packet{
 	struct sockaddr_in address;
-	socklen_t address_len;
+	struct tcphdr *TCPHeader;
 	char buff[1024];
 };
 

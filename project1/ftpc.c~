@@ -1,4 +1,4 @@
-/* client.c using TCP */
+/* client.c using UDP */
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -9,6 +9,7 @@
 #include<limits.h>
 #include <strings.h>
 #include <string.h>
+#include <linux/tcp.h>
 #include "CapitalFunctions.h"
 //client
 
@@ -73,7 +74,7 @@ main(int argc, char *argv[])
                                  * setup */
   struct sockaddr_in to_send;
   struct Packet packet;
-	char buf[1040];
+	char buf[1060];
 	struct hostent *hp;
 	int pie;
 	int *file_size = NULL;
@@ -124,12 +125,12 @@ main(int argc, char *argv[])
 	/* write buf to sock */	
 	packet.address = to_send;
 	printf("port:%d\n",ntohs(packet.address.sin_port));
-	if(SEND(sock,&packet,40,0) < 0) 
+	if(SEND(sock,&packet,60,0) < 0) 
 	{
 		perror("error writing on stream socket");
 		exit(1);
 	}
-	
+	printf("Size of tcp header: %d\n",sizeof(struct tcphdr));
 	printf("Client sends file size: %i and filename: %s\n", ntohl(*file_size), file_name);
 	int sent = 0;
 	int total_sent = 0;
@@ -137,7 +138,7 @@ main(int argc, char *argv[])
 		sent = fread(packet.buff,1,1024,ifp);
 		
 		total_sent += sent;
-		if(SEND(sock,&packet,sent+16,0)< 0) 
+		if(SEND(sock,&packet,sent+16+20,0)< 0) 
 		{
 			perror("error writing on stream socket");
 			exit(1);
