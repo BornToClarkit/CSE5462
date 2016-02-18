@@ -129,8 +129,9 @@ int main(int argc, char* argv[]){
 		crc.TCPHeader.check= gen_crc16(buf+16,pie-16);
 		memcpy(buf,&crc,pie);
 		i++;
-		printf("Packet: %d      Sent: %d\n",i,pie);
-		printf("crc: %d\n",crc.TCPHeader.check);
+		printf("Packet:     size: %d    CRC:   %d\n",i, pie,crc.TCPHeader.check);
+		printf("\n");
+		
 		sendto(remote_sock, buf, pie, 0, (struct sockaddr *)&remote_sin_addr, sizeof(remote_sin_addr));
 		printf("sent packet\n");
 	}

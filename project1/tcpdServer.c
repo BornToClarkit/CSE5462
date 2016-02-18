@@ -14,6 +14,7 @@
 #define LOCAL_PORT 6666
 #define REMOTE_PORT 1040
 #define CRC16 0x8005
+// source:http://stackoverflow.com/questions/10564491/function-to-calculate-a-crc16-checksum
 uint16_t gen_crc16(const uint8_t *data, uint16_t size)
 {
     uint16_t out = 0;

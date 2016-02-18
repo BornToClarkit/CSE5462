@@ -136,6 +136,7 @@ int main(int argc, char* argv[]){
 		memcpy(buf,&packet,pie);
 		int crc =gen_crc16(buf+16,pie-16);
 		printf("Packet:     size: %d    CRC:   %d\n",i, pie,crc);
+		printf("\n");
 		
 		if(crc!= original)
 		{
