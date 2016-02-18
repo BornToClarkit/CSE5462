@@ -118,19 +118,19 @@ int main(int argc, char* argv[]){
     
 	/* put all zeros in buffer (clear) */
 	bzero(buf,1060);
+	int i = 0;
 	while(1){
 		ssize_t pie = recvfrom(local_sock, buf, 1060, 0, (struct sockaddr *)&src_addr , &src_addr_len);
 		//send to troll
 		
 		memcpy(&crc,buf,pie);
-		memcpy(&troll,&crc.address,16);
-		crc.address = empty;
 		crc.TCPHeader.check = 0;
 		memcpy(buf,&crc,pie);
-		crc.TCPHeader.check= gen_crc16(buf,pie);
-		memcpy(&crc.address,&troll,16);
+		crc.TCPHeader.check= gen_crc16(buf+16,pie-16);
 		memcpy(buf,&crc,pie);
-		printf("Sent: %d\n",pie);
+		i++;
+		printf("Packet: %d      Sent: %d\n",i,pie);
+		printf("crc: %d\n",crc.TCPHeader.check);
 		sendto(remote_sock, buf, pie, 0, (struct sockaddr *)&remote_sin_addr, sizeof(remote_sin_addr));
 		printf("sent packet\n");
 	}

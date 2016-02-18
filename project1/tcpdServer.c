@@ -121,11 +121,12 @@ int main(int argc, char* argv[]){
     struct Packet packet;
     struct sockaddr_in troll;
     struct sockaddr_in empty;
+    int i = 0;
 	while(1){
 		printf("received packet\n");
 		ssize_t pie =recvfrom(remote_sock, buf, 1060, 0, (struct sockaddr *)&src_addr , &src_addr_len);
+		i++;
 		
-		printf("size: %d\n", pie);
 		memcpy(&packet,buf,pie);
 		memcpy(&troll,&packet.address,16);
 		packet.address = empty;
@@ -133,7 +134,10 @@ int main(int argc, char* argv[]){
 		int original = packet.TCPHeader.check;
 		packet.TCPHeader.check = 0;
 		memcpy(buf,&packet,pie);
-		int crc =gen_crc16(buf,pie);
+		int crc =gen_crc16(buf+16,pie-16);
+		printf("Packet:     size: %d    CRC:   %d\n",i, pie,crc);
+		printf("\n");
+		
 		if(crc!= original)
 		{
 				printf("garbled!\n");
