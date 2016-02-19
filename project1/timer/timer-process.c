@@ -102,6 +102,7 @@ void delete(struct node** delete_node, struct node** head){
   struct node* iterator_node = *head;
   printf("deleting the node with seq_num: %i\n", delete_seq_num);
   if(delete_seq_num == iterator_seq_num){
+  	timeradd(&(**head).delta_time, &(**head).next->delta_time, &(**head).next->delta_time);
     *head = (**head).next;
     return;
   }

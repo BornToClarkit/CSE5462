@@ -14,8 +14,8 @@
 #define SEND_TO_PORT 7750
 
 struct node* make_node(struct timeval delta_time, int port, int sequence, int flag);
-void startTimer(double time, int sequence);
-void cancelTimer(int sequence);
+void starttimer(double time, int sequence);
+void canceltimer(int sequence);
 
 static int local_sock, send_to_sock; /* initial socket descriptor */
 static struct sockaddr_in send_to_sin_addr;
@@ -60,20 +60,16 @@ int main(int argc, char *argv[]){
   bcopy((void *)hp->h_addr, (void *)&send_to_sin_addr.sin_addr, hp->h_length);
   printf("timer test send_to_port : %d\n", ntohs(send_to_sin_addr.sin_port));
 
-  startTimer(9, 1);
-  sleep(1);
-  startTimer(17,2);
-  sleep(1);
-  startTimer(1, 3);
-  sleep(1);
-  startTimer(3, 4);
-  sleep(1);
-  startTimer(4,5);
-  sleep(1);
-  cancelTimer(2);
-  sleep(1);
-  cancelTimer(4);
-  cancelTimer(100);
+	starttimer(20.0,1);
+	starttimer(10.0,2);
+	starttimer(30.0,3);
+	sleep(5);
+	canceltimer(2);
+	starttimer(20.0,4);
+	sleep(5);
+	starttimer(18.0,5);
+	canceltimer(4);
+	canceltimer(8);
 }
 
 //returns pointer to new node;
@@ -88,7 +84,7 @@ struct node* make_node(struct timeval delta_time, int port, int sequence, int fl
   return tmp;
 }
 
-void startTimer(double time, int sequence){
+void starttimer(double time, int sequence){
   char buf[sizeof(struct node)];		/* buffer for holding read data */
   int sec = (int)time;
   int usec = 1000000*(time - sec);
@@ -101,7 +97,7 @@ void startTimer(double time, int sequence){
   sendto(local_sock, buf, sizeof(struct node) , 0, (struct sockaddr *)&send_to_sin_addr, sizeof(send_to_sin_addr));
 }
 //constructs a timer with 0.0 time and sends to timer-process
-void cancelTimer(int sequence){
+void canceltimer(int sequence){
   char buf[sizeof(struct node)];		/* buffer for holding read data */
   struct timeval time1;
   time1.tv_sec = 0;
