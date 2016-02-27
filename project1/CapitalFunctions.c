@@ -4,12 +4,12 @@
 #include <netdb.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include<errno.h>
-#include<limits.h>
+#include <errno.h>
+#include <limits.h>
 #include <strings.h>
 #include <string.h>
 #include <linux/tcp.h>
-struct Packet{
+struct Packet {
 	struct sockaddr_in address;
 	struct tcphdr TCPHeader;
 	char buff[1024];
@@ -19,14 +19,14 @@ ssize_t RECV(int socket, void *buffer, size_t length, int flags)
 	struct sockaddr_in src_addr;
 	int src_addr_len;
 	struct Packet packet;
-	ssize_t pie =recvfrom(socket, buffer, length, flags, (struct sockaddr *)&src_addr , &src_addr_len);
+	ssize_t pie =recvfrom(socket, buffer, length, flags, (struct sockaddr *)&src_addr, &src_addr_len);
 	pie = pie - 16-20;
 	return pie;
 }
 
 ssize_t SEND(int socket, const void*buffer, size_t length, int flags)
 {
-	//break up buffer struct that was sent through the buffer so that it fits into the 
+	//break up buffer struct that was sent through the buffer so that it fits into the
 	//	arguments of sendto()
 	struct sockaddr_in daemon;
 	struct Packet packet;

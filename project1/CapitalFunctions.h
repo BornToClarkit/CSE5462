@@ -1,4 +1,4 @@
-struct Packet{
+struct Packet {
 	struct sockaddr_in address;
 	struct tcphdr TCPHeader;
 	char buff[1024];
@@ -11,5 +11,3 @@ ssize_t SEND(int socket, const void*buffer, size_t length, int flags);
 int CONNECT(void);
 
 int Accept(void);
-
-

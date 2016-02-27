@@ -6,8 +6,8 @@
 #define INFO_SIZE 9
 
 struct node{
-  struct timeval delta_time;
-  int port;
-  char info[INFO_SIZE];
-  struct node* next;
+	struct timeval delta_time;
+	int port;
+	char info[INFO_SIZE];
+	struct node* next;
 };
