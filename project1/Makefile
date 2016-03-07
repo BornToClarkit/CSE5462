@@ -5,12 +5,14 @@ OBJCLI = ftpc.o CapitalFunctions.o
 OBJSRV = ftps.o	CapitalFunctions.o
 OBJTCPD_CLIENT = tcpdClient.o CapitalFunctions.o
 OBJTCPD_SERVER = tcpdServer.o CapitalFunctions.o
+OBJ_TIMER = timer-process.o
+OBJ_TIMER_TEST = timerTester.o
 CFLAGS =
 DEPS = CapitalFunctions.h
 # setup for system
 LIBS =
 
-all: ftpc ftps tcpdClient tcpdServer
+all: ftpc ftps tcpdClient tcpdServer timer-process timerTester
 
 %.o: %.c $(DEPS)
 	$(CC) $(CFLAGS) -c -o $@ $<
