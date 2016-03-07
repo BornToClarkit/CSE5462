@@ -1,0 +1,20 @@
+Curtis Holton
+Connor Clark
+
+
+*****both the timerTester and timer-process must be on machine beta.*****
+
+The timer implements a singly linked delta timer list.
+
+Compile the timer-process and timerTester with the make command.
+
+Test the timer-process by running the timerTester program.
+
+
+
+to test CRC start 
+ftpc gamma 1040 <filename>    //must be on beta
+ftps 6666    //must be on gamma
+tcpdClient   //must be on beta
+tcpdServer   //must be on gamma
+Troll 9980 -s 0 -x 0 -g 25 -t   //must be on beta
