@@ -19,11 +19,9 @@ uint16_t gen_crc16(const uint8_t *data, uint16_t size)
 {
     uint16_t out = 0;
     int bits_read = 0, bit_flag;
-
     /* Sanity check: */
     if(data == NULL)
         return 0;
-
     while(size > 0)
     {
         bit_flag = out >> 15;
@@ -31,7 +29,6 @@ uint16_t gen_crc16(const uint8_t *data, uint16_t size)
         /* Get next bit: */
         out <<= 1;
         out |= (*data >> bits_read) & 1; // item a) work from the least significant bits
-
         /* Increment bit counter: */
         bits_read++;
         if(bits_read > 7)
@@ -40,13 +37,10 @@ uint16_t gen_crc16(const uint8_t *data, uint16_t size)
             data++;
             size--;
         }
-
         /* Cycle check: */
         if(bit_flag)
             out ^= CRC16;
-
     }
-
     // item b) "push out" the last 16 bits
     int i;
     for (i = 0; i < 16; ++i) {
@@ -55,7 +49,6 @@ uint16_t gen_crc16(const uint8_t *data, uint16_t size)
         if(bit_flag)
             out ^= CRC16;
     }
-
     // item c) reverse the bits
     uint16_t crc = 0;
     i = 0x8000;
@@ -63,7 +56,6 @@ uint16_t gen_crc16(const uint8_t *data, uint16_t size)
     for (; i != 0; i >>=1, j <<= 1) {
         if (i & out) crc |= j;
     }
-
     return crc;
 }
 int main(int argc, char* argv[]){
@@ -127,24 +119,24 @@ int main(int argc, char* argv[]){
 		printf("received packet\n");
 		ssize_t pie =recvfrom(remote_sock, buf, 1060, 0, (struct sockaddr *)&src_addr , &src_addr_len);
 		i++;
-		
+
 		memcpy(&packet,buf,pie);
 		memcpy(&troll,&packet.address,16);
 		packet.address = empty;
-		
+
 		int original = packet.TCPHeader.check;
 		packet.TCPHeader.check = 0;
 		memcpy(buf,&packet,pie);
 		int crc =gen_crc16(buf+16,pie-16);
 		printf("Packet:     size: %d    CRC:   %d\n",i, pie,crc);
 		printf("\n");
-		
+
 		if(crc!= original)
 		{
 				printf("garbled!\n");
 		}
-		
-		
+
+
 		sendto(local_sock,buf,pie,0,(struct sockaddr *)&local_sin_addr,sizeof(local_sin_addr));
 	}
 	free(servermsg);
