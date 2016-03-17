@@ -1,36 +1,20 @@
-README lab3
-
-Connor Clark
 Curtis Holton
-
-This program sends one file to a machine over a network using UDP. The receiving machine must have the server process started before starting the client. The tcpdClient and tcpdServer must be started before starting ftpc. The file will be written to a sub directory called "sub".
-Troll must also be started and the port must be port 9980
-
-To compile the server and client as well as the tcpdClient and tcpdServer use the make command
+Connor Clark
 
 
-ips and ports are hardcoded for this lab
-the server must be started on gamma
-the client must be started on beta
+*****both the timerTester and timer-process must be on machine beta.*****
 
-troll can be started by using the command
+The timer implements a singly linked delta timer list.
 
-troll 9980 -x0 -s0
+Compile the timer-process and timerTester with the make command.
 
-To start the server: (note must be on gamma)
-	ftps 6666
-	
-To start the Client: (note must be on beta)
-	ftpc gamma 1040 <file-to-transfer>
-	
-To start the tcpdClient
-	tcpdClient
-	
-To start the tcpdServer
-	tcpdServer
-	
-	
-	
-	
-the tcpdClient receives packets from the ftpc process and forwards them to the troll process
-the tcpdServer receives the packets from troll and sends them to the ftps proccess
+Test the timer-process by running the timerTester program.
+
+
+
+to test CRC start 
+ftpc gamma 1040 <filename>    //must be on beta
+ftps 6666    //must be on gamma
+tcpdClient   //must be on beta
+tcpdServer   //must be on gamma
+Troll 9980 -s 0 -x 0 -g 25 -t   //must be on beta

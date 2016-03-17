@@ -3,16 +3,16 @@
 CC = gcc
 OBJCLI = ftpc.o CapitalFunctions.o
 OBJSRV = ftps.o	CapitalFunctions.o
-OBJTCPD_CLIENT = tcpdClient.o CapitalFunctions.o
-OBJTCPD_SERVER = tcpdServer.o CapitalFunctions.o
+OBJTCPD_CLIENT = tcpdClient.o CapitalFunctions.o circBuf.o
+OBJTCPD_SERVER = tcpdServer.o CapitalFunctions.o circBuf.o
 OBJ_TIMER = timer-process.o
 OBJ_TIMER_TEST = timerTester.o
 CFLAGS =
-DEPS = CapitalFunctions.h
+DEPS = CapitalFunctions.h circBuf.h
 # setup for system
 LIBS =
 
-all: ftpc ftps tcpdClient tcpdServer
+all: ftpc ftps tcpdClient tcpdServer timer-process timerTester
 
 %.o: %.c $(DEPS)
 	$(CC) $(CFLAGS) -c -o $@ $<
@@ -36,4 +36,4 @@ timerTester: $(OBJ_TIMER_TEST)
 	$(CC) $(CFLAGS) -o $@ $^
 
 clean:
-	rm ftpc ftps tcpdClient tcpdServer CapitalFunctions.o ftpc.o ftps.o tcpdClient.o tcpdServer.o 
+	rm ftpc ftps tcpdClient tcpdServer CapitalFunctions.o ftpc.o ftps.o tcpdClient.o tcpdServer.o
