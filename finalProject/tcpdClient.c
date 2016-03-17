@@ -11,6 +11,7 @@
 #include <linux/tcp.h>
 #include "CapitalFunctions.h"
 #include "timerStruct.h"
+#include "circBuf.h"
 
 #define LOCAL_PORT 6650
 #define REMOTE_PORT 9980
@@ -23,6 +24,7 @@ void canceltimer(int sequence);
 
 static int local_sock, timer_to_sock; /* initial socket descriptor */
 static struct sockaddr_in timer_to_sin_addr;
+
 
 // source:http://stackoverflow.com/questions/10564491/function-to-calculate-a-crc16-checksum
 uint16_t gen_crc16(const uint8_t *data, uint16_t size)
@@ -114,7 +116,7 @@ int main(int argc, char* argv[]){
 	 /* create name with parameters and bind name to socket */
     remote_sin_addr.sin_family = AF_INET;
     remote_sin_addr.sin_port = htons(REMOTE_PORT);
-    char beta[] = "beta";
+    char beta[] = "COMPUTRON";
 	hp = gethostbyname(beta);
 	bcopy((void *)hp->h_addr, (void *)&remote_sin_addr.sin_addr, hp->h_length);
     printf("tcpdClient remote port: %d\n", ntohs(remote_sin_addr.sin_port));
@@ -132,17 +134,13 @@ int main(int argc, char* argv[]){
     char comp[] = "COMPUTRON";
     hp = gethostbyname(comp);
     bcopy((void *)hp->h_addr, (void *)&timer_to_sin_addr.sin_addr, hp->h_length);
-    printf("timer test TIMER_TO_PORT : %d\n", ntohs(timer_to_sin_addr.sin_port));
-
-    starttimer(2.0, 1);
-
+    printf("timer port : %d\n", ntohs(timer_to_sin_addr.sin_port));
     struct Packet crc;
-
 	int i = 0;
+    circBuf sendBuf;
+    initialize_circ_buf(&sendBuf, 64000);
 	while(1){
 		ssize_t pie = recvfrom(local_sock, buf, 1060, 0, (struct sockaddr *)&src_addr , &src_addr_len);
-		//send to troll
-
 		memcpy(&crc,buf,pie);
 		crc.TCPHeader.check = 0;
 		memcpy(buf,&crc,pie);
@@ -151,7 +149,6 @@ int main(int argc, char* argv[]){
 		i++;
 		printf("Packet:     size: %d    CRC:   %d\n",i, pie,crc.TCPHeader.check);
 		printf("\n");
-
 		sendto(remote_sock, buf, pie, 0, (struct sockaddr *)&remote_sin_addr, sizeof(remote_sin_addr));
 		printf("sent packet\n");
 	}
