@@ -139,15 +139,20 @@ int main(int argc, char* argv[]){
 	int i = 0;
     circBuf sendBuf;
     initialize_circ_buf(&sendBuf, 64000);
+
 	while(1){
 		ssize_t pie = recvfrom(local_sock, buf, 1060, 0, (struct sockaddr *)&src_addr , &src_addr_len);
-		memcpy(&crc,buf,pie);
+        if(push_circ_buf(&sendBuf, buf, (int)pie) != pie){
+            //not enough room for all data
+            printf("not enough room for all data\n");
+        }
+        memcpy(&crc,buf,pie);
 		crc.TCPHeader.check = 0;
 		memcpy(buf,&crc,pie);
 		crc.TCPHeader.check= gen_crc16(buf+16,pie-16);
 		memcpy(buf,&crc,pie);
 		i++;
-		printf("Packet:     size: %d    CRC:   %d\n",i, pie,crc.TCPHeader.check);
+		printf("Packet: %i    size: %d    CRC:   %d\n",i, pie,crc.TCPHeader.check);
 		printf("\n");
 		sendto(remote_sock, buf, pie, 0, (struct sockaddr *)&remote_sin_addr, sizeof(remote_sin_addr));
 		printf("sent packet\n");

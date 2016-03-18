@@ -22,6 +22,13 @@ int main(int argc, char *argv[]) {
     remove_circ_buf(&c, 3);
     printf("Amount of data put in buffer: %i\n", push_circ_buf(&c, buf2, 5));
     print_buf(c);
+    remove_circ_buf(&c, 3);
+    printf("Amount of data put in buffer: %i\n", push_circ_buf(&c, buf2, 5));
+    print_buf(c);
+    remove_circ_buf(&c, 5);
+    printf("Amount of data put in buffer: %i\n", push_circ_buf(&c, buf, 5));
+    print_buf(c);
+
     // remove_circ_buf(&c, 4);
     // printf("Amount of data put in buffer: %i\n", push_circ_buf(&c, buf, 5));
     printf("done\n");

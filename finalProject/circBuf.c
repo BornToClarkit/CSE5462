@@ -39,7 +39,7 @@ int push_circ_buf(circBuf *c, char * msg, int msgLength){
                 c->full = 1;
             }
             //copy around buffer either all of the data or to dataTail
-            memcpy(&(c->data[c->dataHead]), msg, tmp);
+            memcpy(&(c->data[c->dataHead]), msg + copied, tmp);
             copied +=tmp;
             return copied;
         }
@@ -84,17 +84,17 @@ int push_circ_buf(circBuf *c, char * msg, int msgLength){
                     tmp =  c->dataTail - c->dataHead;
                 }
                 //copy around buffer
-                memcpy(&(c->data[c->dataHead]), msg, tmp);
+                memcpy(&(c->data[c->dataHead]), msg+ copied, tmp);
                 copied +=tmp;
                 return copied;
         }
     }
-}
+    }
 }
 
 //remove stuff from buffer
 void remove_circ_buf(circBuf *c, int amount){
-    c->dataTail = c->dataTail + amount;
+    c->dataTail = (c->dataTail + amount) % c->size;
     if(amount >0){
         c->full = 0;
     }
