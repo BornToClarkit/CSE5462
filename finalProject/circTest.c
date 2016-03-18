@@ -11,12 +11,19 @@
 #include "circBuf.h"
 
 int main(int argc, char *argv[]) {
-    circBuf c;
+    struct circBuf c;
     char buf[5]= "blah";
     char buf2[5]= "tree";
-    initialize_circ_buf(&c, 6);
+    initialize_circ_buf(&c, 7);
     printf("Amount of data put in buffer: %i\n", push_circ_buf(&c, buf, 5));
+    print_buf(c);
     printf("Amount of data put in buffer: %i\n", push_circ_buf(&c, buf2, 5));
+    print_buf(c);
+    remove_circ_buf(&c, 3);
+    printf("Amount of data put in buffer: %i\n", push_circ_buf(&c, buf2, 5));
+    print_buf(c);
+    // remove_circ_buf(&c, 4);
+    // printf("Amount of data put in buffer: %i\n", push_circ_buf(&c, buf, 5));
     printf("done\n");
 
 }
