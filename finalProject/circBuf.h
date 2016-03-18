@@ -1,9 +1,9 @@
 typedef struct{
-    int head;
-    int tail;
-    char data[64000];
+    char* data; //buffer
+    int size;   //size of buffer
+    int dataHead;
 }circBuf;
 
 void initialize_circ_buf(circBuf *c, int size);
 
-void push_circ_buf(circBuf *c, char *msg, int msgLength);
+int push_circ_buf(circBuf *c, char *msg, int msgLength);
