@@ -11,5 +11,3 @@ ssize_t SEND(int socket, const void*buffer, size_t length, int flags);
 int CONNECT(void);
 
 int Accept(void);
-
-

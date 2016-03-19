@@ -26,12 +26,12 @@ ssize_t RECV(int socket, void *buffer, size_t length, int flags)
 
 ssize_t SEND(int socket, const void*buffer, size_t length, int flags)
 {
-	//break up buffer struct that was sent through the buffer so that it fits into the 
+	//break up buffer struct that was sent through the buffer so that it fits into the
 	//	arguments of sendto()
 	struct sockaddr_in daemon;
 	struct Packet packet;
 	struct hostent *h2;
-	h2 = gethostbyname("beta");
+	h2 = gethostbyname("COMPUTRON");
 	bcopy((void *)h2->h_addr, (void *)&daemon.sin_addr, h2->h_length);
 	daemon.sin_family = AF_INET;
 	if((daemon.sin_port = htons(6650)) < 0)

@@ -28,7 +28,7 @@ long check_args(int argc, char *argv[]){
 		}
 		return 0;
 	}
-	else 
+	else
 	{
 		printf("Invalid number of arguments or an argument was null\ncommand should look like this:\n");
 		printf("ftpc <remote-host> <port-number> <local-file-to-transfer> \n");
@@ -44,14 +44,14 @@ int get_port(char *argv[]){
 		int val;
 		errno = 0;
 		val = strtol(argv[2], &endptr, 10);
-		if(errno !=0 && (val == LONG_MAX || val == LONG_MIN) || (errno !=0 && val==0) || endptr == argv[1] || val < 0)	
+		if(errno !=0 && (val == LONG_MAX || val == LONG_MIN) || (errno !=0 && val==0) || endptr == argv[1] || val < 0)
 		{
 			printf("Error converting port-number.\n");
 			val = -1;
 		}
 		return val;
 	}
-	else 
+	else
 	{
 		return -1;
 	}
@@ -70,7 +70,7 @@ main(int argc, char *argv[])
 {
 	int sock;                     /* initial socket descriptor */
 	int rval;                    /* returned value from a read */
-	struct sockaddr_in sin_addr; /* structure for socket name 
+	struct sockaddr_in sin_addr; /* structure for socket name
                                  * setup */
   struct sockaddr_in to_send;
   struct Packet packet;
@@ -87,7 +87,7 @@ main(int argc, char *argv[])
 	strcpy(file_name, argv[3]);
 	FILE *ifp = fopen(file_name, "rb");
 	if(!ifp)
-	{	
+	{
 		printf("test\n");
 		printf("Could not open input file: \"%s\"\n", file_name);
 		exit(1);
@@ -100,7 +100,7 @@ main(int argc, char *argv[])
 		exit(1);
 	}
 	hp = gethostbyname(argv[1]);
-	if(hp == 0) 
+	if(hp == 0)
 	{
 		fprintf(stderr, "%s: unknown host\n", argv[1]);
 		exit(2);
@@ -122,10 +122,10 @@ main(int argc, char *argv[])
 	//copy file name into buffer
 	memcpy(packet.buff + sizeof(int), file_name ,20);
 	memcpy(file_name,packet.buff+4,20);
-	/* write buf to sock */	
+	/* write buf to sock */
 	packet.address = to_send;
 	printf("port:%d\n",ntohs(packet.address.sin_port));
-	if(SEND(sock,&packet,60,0) < 0) 
+	if(SEND(sock,&packet,60,0) < 0)
 	{
 		perror("error writing on stream socket");
 		exit(1);
@@ -136,9 +136,8 @@ main(int argc, char *argv[])
 	int total_sent = 0;
 	while(total_sent < ntohl(*file_size)){
 		sent = fread(packet.buff,1,1024,ifp);
-		
 		total_sent += sent;
-		if(SEND(sock,&packet,sent+16+20,0)< 0) 
+		if(SEND(sock,&packet,sent+16+20,0)< 0)
 		{
 			perror("error writing on stream socket");
 			exit(1);

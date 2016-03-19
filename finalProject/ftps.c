@@ -61,8 +61,8 @@ main(int argc, char* argv[])
 		perror("error opening datagram socket");
 		exit(1);
 	}
-	
-	
+
+
 	 /* create name with parameters and bind name to socket */
     sin_addr.sin_family = AF_INET;
     sin_addr.sin_port = htons(get_port(argc, argv));
@@ -99,7 +99,7 @@ main(int argc, char* argv[])
 	}
 	*/
 	printf("Server receives filename: %s\n",packet.buff+4);
-	struct stat st;		/* used to determine if directory exists */			
+	struct stat st;		/* used to determine if directory exists */
 	strcpy(dest,"sub/");
 	if(stat(dest, &st)!=0)
 	{
@@ -116,7 +116,7 @@ main(int argc, char* argv[])
 	{
 		printf("error opening the output file");
 		exit(1);
-		
+
 	}
 	printf("size of buffer: %d\n",sizeof(buf));
 	printf("File saved to this location: %s\n",location);
