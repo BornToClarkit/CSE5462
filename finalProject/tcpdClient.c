@@ -141,7 +141,7 @@ int main(int argc, char* argv[]){
     char comp[] = "beta";
     hp = gethostbyname(comp);
     bcopy((void *)hp->h_addr, (void *)&timer_to_sin_addr.sin_addr, hp->h_length);
-    printf("timer port : %d\n", ntohs(timer_to_sin_addr.sin_port));
+    printf("timer_to_port : %d\n", ntohs(timer_to_sin_addr.sin_port));
     ///////////////////////////////////////////////////////////////////////////
     //timer from port
     //////////////////////////////////////////////////////////////////////////
@@ -163,6 +163,7 @@ int main(int argc, char* argv[]){
 	perror("Timer_from 2: getting sock name");
 	exit(3);
     }
+    printf("timer_from_port : %d\n", ntohs(timer_from_sin_addr.sin_port));
     //////////////////////////////////////////////////////////////////////////
 
 

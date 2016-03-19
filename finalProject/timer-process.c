@@ -183,7 +183,7 @@ int main(int argc, char *argv[]) {
    /* create name with parameters and bind name to socket */
   remote_sin_addr.sin_family = AF_INET;
   remote_sin_addr.sin_port = htons(REMOTE_PORT);
-  char beta[] = "COMPUTRON";
+  char beta[] = "beta";
   hp = gethostbyname(beta);
   bcopy((void *)hp->h_addr, (void *)&remote_sin_addr.sin_addr, hp->h_length);
   printf("tcpdClient remote port: %d\n", ntohs(remote_sin_addr.sin_port));
