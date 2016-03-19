@@ -26,7 +26,7 @@ ssize_t RECV(int socket, void *buffer, size_t length, int flags)
 
 ssize_t SEND(int socket, const void*buffer, size_t length, int flags)
 {
-	//break up buffer struct that was sent through the buffer so that it fits into the 
+	//break up buffer struct that was sent through the buffer so that it fits into the
 	//	arguments of sendto()
 	struct sockaddr_in daemon;
 	struct Packet packet;

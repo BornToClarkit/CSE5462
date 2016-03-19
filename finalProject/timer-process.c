@@ -11,6 +11,7 @@
 #include "timerStruct.h"
 
 #define LOCAL_PORT  7750
+#define REMOTE_PORT 9940
 
 struct node* make_node(char * buf){
   struct node* tmp;
@@ -136,12 +137,15 @@ void print_list(struct node* iterator_node){
 
 int main(int argc, char *argv[]) {
   int local_sock;	/* initial socket descriptor */
+  int remote_sock;
   struct sockaddr_in local_sin_addr;		/* structure for socket name setup */
+  struct sockaddr_in remote_sin_addr;
   struct sockaddr_in src_addr;
   int src_addr_len;
   int addr_len;
   char buf[sizeof(struct node)];		/* buffer for holding read data */
   struct timeval zero_time;
+  struct hostent *hp;
   zero_time.tv_sec = 0;
   zero_time.tv_usec = 0;
   if((local_sock = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
@@ -168,6 +172,24 @@ int main(int argc, char *argv[]) {
   printf("timer-process local port: %d\n", ntohs(local_sin_addr.sin_port));
   /* put all zeros in buffer (clear) */
   bzero(buf,sizeof(struct node));
+  /////////////////////////////////////////////////////////////////////////////////
+  //remote port below here
+  ////////////////////////////////////////////////////////////////////////////////
+  if((remote_sock = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
+  {
+      perror("error opening datagram socket");
+      exit(1);
+  }
+   /* create name with parameters and bind name to socket */
+  remote_sin_addr.sin_family = AF_INET;
+  remote_sin_addr.sin_port = htons(REMOTE_PORT);
+  char beta[] = "beta";
+  hp = gethostbyname(beta);
+  bcopy((void *)hp->h_addr, (void *)&remote_sin_addr.sin_addr, hp->h_length);
+  printf("tcpdClient remote port: %d\n", ntohs(remote_sin_addr.sin_port));
+  /////
+  //end remote port
+  ////
   struct node* head = NULL;
   struct node* node_recv = NULL;
   fd_set set;
@@ -209,8 +231,11 @@ int main(int argc, char *argv[]) {
     }
     else if (timercmp(&zero_time, &head->delta_time, ==)&& head!=NULL){
         int seq_num;
+        char toSend[sizeof(int)];
         memcpy(&seq_num, head->info+1, sizeof(int));
+        memcpy(&toSend, head->info+1, sizeof(int));
         printf("Timer with seq_num: %i has timed out. New list:\n", seq_num);
+        sendto(remote_sock, toSend, sizeof(int), 0, (struct sockaddr *)&remote_sin_addr, sizeof(remote_sin_addr));
         if(head->next != NULL){
           head = head->next;
         }
@@ -220,6 +245,6 @@ int main(int argc, char *argv[]) {
     }
     print_list(head);
   }
- 
+
   return 0;
 }

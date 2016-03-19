@@ -11,18 +11,27 @@
 #include <linux/tcp.h>
 #include "CapitalFunctions.h"
 #include "timerStruct.h"
+#include "circBuf.h"
 
 #define LOCAL_PORT 6650
 #define REMOTE_PORT 9980
 #define CRC16 0x8005
 #define TIMER_TO_PORT 7750
+#define TIMER_FROM_PORT 9940
 
 struct node* make_node(struct timeval delta_time, int port, int sequence, int flag);
 void starttimer(double time, int sequence);
 void canceltimer(int sequence);
 
-static int local_sock, timer_to_sock; /* initial socket descriptor */
-static struct sockaddr_in timer_to_sin_addr;
+static int local_sock, timer_to_sock, timer_from_sock; /* initial socket descriptor */
+static struct sockaddr_in timer_to_sin_addr, timer_from_sin_addr;
+
+static inline int max(int lhs, int rhs) {
+    if(lhs > rhs)
+        return lhs;
+    else
+        return rhs;
+}
 
 // source:http://stackoverflow.com/questions/10564491/function-to-calculate-a-crc16-checksum
 uint16_t gen_crc16(const uint8_t *data, uint16_t size)
@@ -129,31 +138,87 @@ int main(int argc, char* argv[]){
     /* create name with parameters and bind name to socket */
     timer_to_sin_addr.sin_family = AF_INET;
     timer_to_sin_addr.sin_port = htons(TIMER_TO_PORT);
-    char comp[] = "COMPUTRON";
+    char comp[] = "beta";
     hp = gethostbyname(comp);
     bcopy((void *)hp->h_addr, (void *)&timer_to_sin_addr.sin_addr, hp->h_length);
-    printf("timer test TIMER_TO_PORT : %d\n", ntohs(timer_to_sin_addr.sin_port));
+    printf("timer_to_port : %d\n", ntohs(timer_to_sin_addr.sin_port));
+    ///////////////////////////////////////////////////////////////////////////
+    //timer from port
+    //////////////////////////////////////////////////////////////////////////
+    if((timer_from_sock = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
+    {
+        perror("error opening datagram socket");
+        exit(1);
+    }
+    timer_from_sin_addr.sin_family = AF_INET;
+    timer_from_sin_addr.sin_port = htons(TIMER_FROM_PORT);
+    timer_from_sin_addr.sin_addr.s_addr = INADDR_ANY;
+    if(bind(timer_from_sock, (struct sockaddr *)&timer_from_sin_addr, sizeof(timer_from_sin_addr)) < 0) {
+	perror("Timer_from 1: getting socket name");
+	exit(2);
+    }
+    addr_len=sizeof(struct sockaddr_in);
+    /* Find assigned port value and print it for client to use */
+    if(getsockname(timer_from_sock, (struct sockaddr *)&timer_from_sin_addr, &src_addr_len) < 0){
+	perror("Timer_from 2: getting sock name");
+	exit(3);
+    }
+    printf("timer_from_port : %d\n", ntohs(timer_from_sin_addr.sin_port));
+    //////////////////////////////////////////////////////////////////////////
 
-    starttimer(2.0, 1);
 
     struct Packet crc;
-
 	int i = 0;
+    circBuf sendBuf;
+    initialize_circ_buf(&sendBuf, 64000);
+    int pushed = 0;
+    fd_set set; //set of sockets to watch
+    int maxFD = max(max(local_sock, timer_from_sock), remote_sock);
+    starttimer(2.0, 1);
+    starttimer(4.0, 2);
+    starttimer(5.0,3);
 	while(1){
-		ssize_t pie = recvfrom(local_sock, buf, 1060, 0, (struct sockaddr *)&src_addr , &src_addr_len);
-		//send to troll
+        FD_ZERO(&set);
+        FD_SET(local_sock, &set);
+        FD_SET(timer_from_sock, &set);
+        FD_SET(remote_sock, &set);
+        if (select(maxFD + 1, &set, NULL, NULL, NULL) <0) {
+          printf("\nSelect threw an exception\n");
+          return 0;
+        }
+        if(FD_ISSET(timer_from_sock, &set)){
+            //timer expired
+            char tmpBuf[sizeof(int)];
+            int seq_num;
+            recvfrom(timer_from_sock, tmpBuf, sizeof(int), 0, (struct sockaddr *)&src_addr , &src_addr_len);
+            memcpy(&seq_num, tmpBuf, sizeof(int));
+            printf("Timer with seq_num: %i has timed out.\n", seq_num);
+            fflush(stdout);
+        }
+        if(FD_ISSET(local_sock, &set)){
+            //from ftpc, need to send to ftps
+            // ssize_t pie = recvfrom(local_sock, buf, 1060, 0, (struct sockaddr *)&src_addr , &src_addr_len);
+            // pushed = push_circ_buf(&sendBuf, buf, (int)pie);
+            // if(pushed != (int)pie){
+            //     //not enough room for all data
+            //     //wait here until window is moved up then push more data
+            //     printf("not enough room for all data\n");
+            // }
+            // memcpy(&crc,buf,pie);
+    		// crc.TCPHeader.check = 0;
+    		// memcpy(buf,&crc,pie);
+    		// crc.TCPHeader.check= gen_crc16(buf+16,pie-16);
+    		// memcpy(buf,&crc,pie);
+    		// i++;
+    		// printf("Packet: %i    size: %d    CRC:   %d\n",i, pie,crc.TCPHeader.check);
+    		// printf("\n");
+    		// sendto(remote_sock, buf, pie, 0, (struct sockaddr *)&remote_sin_addr, sizeof(remote_sin_addr));
+    		// printf("sent packet\n");
+        }
+        if(FD_ISSET(remote_sock, &set)){
+            //ACKS from ftps
+        }
 
-		memcpy(&crc,buf,pie);
-		crc.TCPHeader.check = 0;
-		memcpy(buf,&crc,pie);
-		crc.TCPHeader.check= gen_crc16(buf+16,pie-16);
-		memcpy(buf,&crc,pie);
-		i++;
-		printf("Packet:     size: %d    CRC:   %d\n",i, pie,crc.TCPHeader.check);
-		printf("\n");
-
-		sendto(remote_sock, buf, pie, 0, (struct sockaddr *)&remote_sin_addr, sizeof(remote_sin_addr));
-		printf("sent packet\n");
 	}
 }
 
