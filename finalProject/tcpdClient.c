@@ -26,6 +26,15 @@ void canceltimer(int sequence);
 static int local_sock, timer_to_sock, timer_from_sock; /* initial socket descriptor */
 static struct sockaddr_in timer_to_sin_addr, timer_from_sin_addr;
 
+
+
+static inline int max(int lhs, int rhs) {
+    if(lhs > rhs)
+        return lhs;
+    else
+        return rhs;
+}
+
 // source:http://stackoverflow.com/questions/10564491/function-to-calculate-a-crc16-checksum
 uint16_t gen_crc16(const uint8_t *data, uint16_t size)
 {
@@ -165,12 +174,28 @@ int main(int argc, char* argv[]){
     initialize_circ_buf(&sendBuf, 64000);
     int pushed = 0;
     fd_set set; //set of sockets to watch
-
+    int maxFD = max(max(local_sock, timer_from_sock), remote_sock);
+    starttimer(2.0, 1);
+    starttimer(4.0, 2);
+    starttimer(5.0,3);
 	while(1){
-
-        starttimer(2.0, 1);
-        int s = recvfrom(timer_from_sock, buf, 1060, 0, (struct sockaddr *)&src_addr , &src_addr_len);
-        printf("received: %i",s);
+        FD_ZERO(&set);
+        FD_SET(local_sock, &set);
+        FD_SET(timer_from_sock, &set);
+        FD_SET(remote_sock, &set);
+        if (select(maxFD + 1, &set, NULL, NULL, NULL) <0) {
+          printf("\nSelect threw an exception\n");
+          return 0;
+        }
+        if(FD_ISSET(timer_from_sock, &set)){
+            //timer expired
+            char tmpBuf[sizeof(int)];
+            int seq_num;
+            recvfrom(timer_from_sock, tmpBuf, sizeof(int), 0, (struct sockaddr *)&src_addr , &src_addr_len);
+            memcpy(&seq_num, tmpBuf, sizeof(int));
+            printf("Timer with seq_num: %i has timed out.\n", seq_num);
+            fflush(stdout);
+        }
 		// ssize_t pie = recvfrom(local_sock, buf, 1060, 0, (struct sockaddr *)&src_addr , &src_addr_len);
         // pushed = push_circ_buf(&sendBuf, buf, (int)pie);
         // if(pushed != (int)pie){
