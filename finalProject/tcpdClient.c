@@ -125,7 +125,7 @@ int main(int argc, char* argv[]){
 	 /* create name with parameters and bind name to socket */
     remote_sin_addr.sin_family = AF_INET;
     remote_sin_addr.sin_port = htons(REMOTE_PORT);
-    char beta[] = "COMPUTRON";
+    char beta[] = "beta";
 	hp = gethostbyname(beta);
 	bcopy((void *)hp->h_addr, (void *)&remote_sin_addr.sin_addr, hp->h_length);
     printf("tcpdClient remote port: %d\n", ntohs(remote_sin_addr.sin_port));
@@ -140,7 +140,7 @@ int main(int argc, char* argv[]){
     /* create name with parameters and bind name to socket */
     timer_to_sin_addr.sin_family = AF_INET;
     timer_to_sin_addr.sin_port = htons(TIMER_TO_PORT);
-    char comp[] = "COMPUTRON";
+    char comp[] = "beta";
     hp = gethostbyname(comp);
     bcopy((void *)hp->h_addr, (void *)&timer_to_sin_addr.sin_addr, hp->h_length);
     printf("timer port : %d\n", ntohs(timer_to_sin_addr.sin_port));
@@ -196,23 +196,30 @@ int main(int argc, char* argv[]){
             printf("Timer with seq_num: %i has timed out.\n", seq_num);
             fflush(stdout);
         }
-		// ssize_t pie = recvfrom(local_sock, buf, 1060, 0, (struct sockaddr *)&src_addr , &src_addr_len);
-        // pushed = push_circ_buf(&sendBuf, buf, (int)pie);
-        // if(pushed != (int)pie){
-        //     //not enough room for all data
-        //     //wait here until window is moved up then push more data
-        //     printf("not enough room for all data\n");
-        // }
-        // memcpy(&crc,buf,pie);
-		// crc.TCPHeader.check = 0;
-		// memcpy(buf,&crc,pie);
-		// crc.TCPHeader.check= gen_crc16(buf+16,pie-16);
-		// memcpy(buf,&crc,pie);
-		// i++;
-		// printf("Packet: %i    size: %d    CRC:   %d\n",i, pie,crc.TCPHeader.check);
-		// printf("\n");
-		// sendto(remote_sock, buf, pie, 0, (struct sockaddr *)&remote_sin_addr, sizeof(remote_sin_addr));
-		// printf("sent packet\n");
+        if(FD_ISSET(local_sock, &set)){
+            //from ftpc, need to send to ftps
+            // ssize_t pie = recvfrom(local_sock, buf, 1060, 0, (struct sockaddr *)&src_addr , &src_addr_len);
+            // pushed = push_circ_buf(&sendBuf, buf, (int)pie);
+            // if(pushed != (int)pie){
+            //     //not enough room for all data
+            //     //wait here until window is moved up then push more data
+            //     printf("not enough room for all data\n");
+            // }
+            // memcpy(&crc,buf,pie);
+    		// crc.TCPHeader.check = 0;
+    		// memcpy(buf,&crc,pie);
+    		// crc.TCPHeader.check= gen_crc16(buf+16,pie-16);
+    		// memcpy(buf,&crc,pie);
+    		// i++;
+    		// printf("Packet: %i    size: %d    CRC:   %d\n",i, pie,crc.TCPHeader.check);
+    		// printf("\n");
+    		// sendto(remote_sock, buf, pie, 0, (struct sockaddr *)&remote_sin_addr, sizeof(remote_sin_addr));
+    		// printf("sent packet\n");
+        }
+        if(FD_ISSET(remote_sock, &set)){
+            //ACKS from ftps
+        }
+
 	}
 }
 
