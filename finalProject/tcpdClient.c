@@ -26,8 +26,6 @@ void canceltimer(int sequence);
 static int local_sock, timer_to_sock, timer_from_sock; /* initial socket descriptor */
 static struct sockaddr_in timer_to_sin_addr, timer_from_sin_addr;
 
-
-
 static inline int max(int lhs, int rhs) {
     if(lhs > rhs)
         return lhs;

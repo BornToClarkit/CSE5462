@@ -3,12 +3,12 @@
 CC = gcc
 OBJCLI = ftpc.o CapitalFunctions.o
 OBJSRV = ftps.o	CapitalFunctions.o
-OBJTCPD_CLIENT = tcpdClient.o CapitalFunctions.o circBuf.o
-OBJTCPD_SERVER = tcpdServer.o CapitalFunctions.o circBuf.o
+OBJTCPD_CLIENT = tcpdClient.o CapitalFunctions.o circBuf.o window.o
+OBJTCPD_SERVER = tcpdServer.o CapitalFunctions.o circBuf.o window.o
 OBJ_TIMER = timer-process.o
 OBJ_TIMER_TEST = timerTester.o
 CFLAGS =
-DEPS = CapitalFunctions.h circBuf.h
+DEPS = CapitalFunctions.h circBuf.h window.h
 # setup for system
 LIBS =
 
