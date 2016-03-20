@@ -100,8 +100,8 @@ int main(int argc, char* argv[]){
     local_sin_addr.sin_port = htons(LOCAL_PORT);
     local_sin_addr.sin_addr.s_addr = INADDR_ANY;
     if(bind(local_sock, (struct sockaddr *)&local_sin_addr, sizeof(local_sin_addr)) < 0) {
-	perror("getting socket name");
-	exit(2);
+		perror("getting socket name");
+		exit(2);
     }
     addr_len=sizeof(struct sockaddr_in);
     /* Find assigned port value and print it for client to use */
@@ -120,6 +120,10 @@ int main(int argc, char* argv[]){
 		perror("error opening datagram socket");
 		exit(1);
 	}
+	if(bind(remote_sock, (struct sockaddr *)&remote_sin_addr, sizeof(remote_sin_addr)) < 0) {
+		perror("getting socket name");
+		exit(2);
+    }
 	 /* create name with parameters and bind name to socket */
     remote_sin_addr.sin_family = AF_INET;
     remote_sin_addr.sin_port = htons(REMOTE_PORT);
@@ -154,8 +158,8 @@ int main(int argc, char* argv[]){
     timer_from_sin_addr.sin_port = htons(TIMER_FROM_PORT);
     timer_from_sin_addr.sin_addr.s_addr = INADDR_ANY;
     if(bind(timer_from_sock, (struct sockaddr *)&timer_from_sin_addr, sizeof(timer_from_sin_addr)) < 0) {
-	perror("Timer_from 1: getting socket name");
-	exit(2);
+		perror("Timer_from 1: getting socket name");
+		exit(2);
     }
     addr_len=sizeof(struct sockaddr_in);
     /* Find assigned port value and print it for client to use */
@@ -170,13 +174,11 @@ int main(int argc, char* argv[]){
     struct Packet crc;
 	int i = 0;
     circBuf sendBuf;
-    initialize_circ_buf(&sendBuf, 64000);
+    initialize_circ_buf(&sendBuf, 6400);
     int pushed = 0;
     fd_set set; //set of sockets to watch
     int maxFD = max(max(local_sock, timer_from_sock), remote_sock);
-    starttimer(2.0, 1);
-    starttimer(4.0, 2);
-    starttimer(5.0,3);
+    //selective repeat
 	while(1){
         FD_ZERO(&set);
         FD_SET(local_sock, &set);
@@ -197,13 +199,22 @@ int main(int argc, char* argv[]){
         }
         if(FD_ISSET(local_sock, &set)){
             //from ftpc, need to send to ftps
-            // ssize_t pie = recvfrom(local_sock, buf, 1060, 0, (struct sockaddr *)&src_addr , &src_addr_len);
-            // pushed = push_circ_buf(&sendBuf, buf, (int)pie);
-            // if(pushed != (int)pie){
-            //     //not enough room for all data
-            //     //wait here until window is moved up then push more data
-            //     printf("not enough room for all data\n");
-            // }
+             ssize_t pie = recvfrom(local_sock, buf, 1060, 0, (struct sockaddr *)&src_addr , &src_addr_len);
+             pushed = push_circ_buf(&sendBuf, buf, (int)pie);
+             while(pushed != (int)pie){
+                 //not enough room for all data
+                 //wait here until window is moved up then push more data
+                 pushed += push_circ_buf(&sendBuf, buf, (int)pie);  
+                 printf("not enough room for all data\n");
+             }
+             //send back to SEND function
+             int one = 1;
+             printf("sending\n");
+             
+             printf("to this socket : %d\n", src_addr);
+             fflush(stdout);
+             sendto(local_sock, &one , sizeof(int), 0, (struct sockaddr *)&src_addr , sizeof(src_addr));
+             
             // memcpy(&crc,buf,pie);
     		// crc.TCPHeader.check = 0;
     		// memcpy(buf,&crc,pie);

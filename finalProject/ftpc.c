@@ -99,6 +99,11 @@ main(int argc, char *argv[])
 		perror("error opening socket");
 		exit(1);
 	}
+	if(bind(sock, (struct sockaddr *)&sin_addr, sizeof(sin_addr)) < 0) {
+		perror("ftpc: : getting socket name");
+		exit(2);
+    }
+    printf("socket is bound\n");
 	hp = gethostbyname(argv[1]);
 	if(hp == 0)
 	{
