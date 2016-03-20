@@ -168,9 +168,9 @@ int main(int argc, char* argv[]){
 
 
     struct Packet crc;
-	int i = 0;
+		int i = 0;
     circBuf sendBuf;
-    initialize_circ_buf(&sendBuf, 64000);
+    initialize_circ_buf(&sendBuf, 67840);
     int pushed = 0;
     fd_set set; //set of sockets to watch
     int maxFD = max(max(local_sock, timer_from_sock), remote_sock);
