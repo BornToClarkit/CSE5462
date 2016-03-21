@@ -16,6 +16,7 @@
 #define LOCAL_PORT 6650
 #define REMOTE_PORT 9980
 #define CRC16 0x8005
+#define REMOTE_TROLL 5540
 #define TIMER_TO_PORT 7750
 #define TIMER_FROM_PORT 9940
 
@@ -80,7 +81,7 @@ uint16_t gen_crc16(const uint8_t *data, uint16_t size)
 }
 int main(int argc, char* argv[]){
 /*initialize socket connection in unix domain*/
-	int remote_sock;		/* initial socket descriptor */
+	int remote_sock , troll_sock;		/* initial socket descriptor */
 	struct sockaddr_in local_sin_addr;		/* structure for socket name setup */
 	struct sockaddr_in remote_sin_addr;
 	struct sockaddr_in src_addr;
@@ -90,6 +91,7 @@ int main(int argc, char* argv[]){
 	int addr_len;
 	struct hostent *hp;
 	char buf[1060];		/* buffer for holding read data */
+	
 	if((local_sock = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
 	{
 		perror("error opening datagram socket");
@@ -100,7 +102,7 @@ int main(int argc, char* argv[]){
     local_sin_addr.sin_port = htons(LOCAL_PORT);
     local_sin_addr.sin_addr.s_addr = INADDR_ANY;
     if(bind(local_sock, (struct sockaddr *)&local_sin_addr, sizeof(local_sin_addr)) < 0) {
-		perror("getting socket name");
+		perror("binding");
 		exit(2);
     }
     addr_len=sizeof(struct sockaddr_in);
@@ -120,16 +122,33 @@ int main(int argc, char* argv[]){
 		perror("error opening datagram socket");
 		exit(1);
 	}
-	if(bind(remote_sock, (struct sockaddr *)&remote_sin_addr, sizeof(remote_sin_addr)) < 0) {
-		perror("getting socket name");
-		exit(2);
-    }
-	 /* create name with parameters and bind name to socket */
-    remote_sin_addr.sin_family = AF_INET;
+	printf("pie\n");
+	 	remote_sin_addr.sin_family = AF_INET;
     remote_sin_addr.sin_port = htons(REMOTE_PORT);
     char beta[] = "beta";
-	hp = gethostbyname(beta);
-	bcopy((void *)hp->h_addr, (void *)&remote_sin_addr.sin_addr, hp->h_length);
+		hp = gethostbyname(beta);
+		bcopy((void *)hp->h_addr, (void *)&remote_sin_addr.sin_addr, hp->h_length);
+	/*if(bind(remote_sock, (struct sockaddr *)&remote_sin_addr, sizeof(remote_sin_addr)) < 0) {
+		perror("binding");
+		exit(2);
+    }*/
+	 /* create name with parameters and bind name to socket */
+   
+   
+   if((troll_sock = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
+	{
+		perror("error opening datagram socket");
+		exit(1);
+	}
+	printf("pie\n");
+	 	troll.sin_family = AF_INET;
+    troll.sin_port = htons(REMOTE_TROLL);
+    troll.sin_addr.s_addr = INADDR_ANY;
+		if(bind(troll_sock, (struct sockaddr *)&troll, sizeof(troll)) < 0) {
+		perror("binding");
+		exit(2);
+    }
+   
     printf("tcpdClient remote port: %d\n", ntohs(remote_sin_addr.sin_port));
     /////////////////////////////////////////////////////////////////////////////////
     //timer port below here
@@ -177,6 +196,8 @@ int main(int argc, char* argv[]){
 	int sequenceArray[20];
 	int totalRecv = 0;
 	int sent = 0;
+	ssize_t ackSize;
+	ssize_t receivedSize;
     circBuf sendBuf;
 	window w;
     initialize_circ_buf(&sendBuf, 67840);
@@ -190,7 +211,7 @@ int main(int argc, char* argv[]){
         FD_ZERO(&set);
         FD_SET(local_sock, &set);
         FD_SET(timer_from_sock, &set);
-        FD_SET(remote_sock, &set);
+        FD_SET(troll_sock, &set);
         if (select(maxFD + 1, &set, NULL, NULL, NULL) <0) {
           printf("\nSelect threw an exception\n");
           return 0;
@@ -208,23 +229,29 @@ int main(int argc, char* argv[]){
             //from ftpc, need to send to ftps
              printf("Received packet\n");
              totalRecv++;
-             ssize_t pie = recvfrom(local_sock, buf, 1060, 0, (struct sockaddr *)&src_addr , &src_addr_len);
-             pushed = push_circ_buf(&sendBuf, buf, (int)pie);
-             if(pushed == (int)pie){
+             receivedSize = recvfrom(local_sock, buf, 1060, 0, (struct sockaddr *)&src_addr , &src_addr_len);
+             
+             pushed = push_circ_buf(&sendBuf, buf, (int)receivedSize);
+             if(pushed == (int)receivedSize){
              	//tell SEND function to unblock
                  sendto(local_sock, &one , sizeof(int), 0, (struct sockaddr *)&src_addr , sizeof(src_addr));
+                 
+                 
              }
              else{
              	printf("Buffer is full\n");
              	fflush(stdout);
              } 
         }
-        if(FD_ISSET(remote_sock, &set)){
+        if(FD_ISSET(troll_sock, &set)){
             //receive ack
            	//check if ack sequence # is in the array
-           	int seq;
-           	recvfrom(remote_sock, &seq, sizeof(int), 0, (struct sockaddr *)&empty , &src_addr_len);
-           	ArrayCheckRemove(sequenceArray, seq);	
+           	char ackbuf[1060];
+           	ackSize = recvfrom(troll_sock, &ackbuf, sizeof(int), 0, (struct sockaddr *)&empty , &src_addr_len);
+           	struct Packet ack;
+           	memcpy(&ack,ackbuf,ackSize);
+           	printf("packet %d acknowledged\n",ack.TCPHeader.seq);
+           	ArrayCheckRemove(sequenceArray, ack.TCPHeader.seq);	
            	if(sequenceArray[0]==-1)
            	{
            		move_window(&w,&sendBuf);
@@ -238,6 +265,7 @@ int main(int argc, char* argv[]){
        	
         int p = 0;
 		char buffer[1060];
+		int bufLocation = 0;
 		/*
 		if(sent != totalRecv){
 				
@@ -249,19 +277,21 @@ int main(int argc, char* argv[]){
         	{
         		struct Packet sending;
         		printf("before\n");
-        		memcpy(&sending,sendBuf.data, 1060);
+        		memcpy(&sending,sendBuf.data+(bufLocation), receivedSize);
+        		bufLocation +=receivedSize;
         		printf("after\n");
         		fflush(stdout);
         		//packet checksum and sequence #
         		sequenceArray[j%20] = j;
-    			//sending.TCPHeader.check = 0;
-    			//memcpy(buffer,&sending,1060);
-    			//sending.TCPHeader.check= gen_crc16(buffer+16,1060-16);
-    			//memcpy(buffer,&sending,1060);
-    			i++;
+    			sending.TCPHeader.check = 0;
+    			sending.TCPHeader.seq = j;
+    			memcpy(buffer,&sending,1060);
+    			sending.TCPHeader.check= gen_crc16(buffer+16,receivedSize-16);
+    			memcpy(buffer,&sending,1060);
     			//printf("Packet: %i    size: %d    CRC:   %d\n",i, pie,crc.TCPHeader.check);
     			printf("\n");
-    			sendto(remote_sock, &sending, 1060, 0, (struct sockaddr *)&remote_sin_addr, sizeof(remote_sin_addr));
+    			sendto(remote_sock, &sending, receivedSize, 0, (struct sockaddr *)&remote_sin_addr, sizeof(remote_sin_addr));
+    			printf("Packet:   %d  size: %d    CRC:   %d\n",sending.TCPHeader.seq, receivedSize,sending.TCPHeader.check);
     			printf("sent packet\n");
         		//start timer with sequence #
         		starttimer(5.0, j);

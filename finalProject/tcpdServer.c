@@ -61,9 +61,11 @@ uint16_t gen_crc16(const uint8_t *data, uint16_t size)
 }
 int main(int argc, char* argv[]){
 /*initialize socket connection in unix domain*/
-	int local_sock, remote_sock;		/* initial socket descriptor */
+	int local_sock, remote_sock, troll_sock;		/* initial socket descriptor */
 	struct sockaddr_in local_sin_addr;		/* structure for socket name setup */
 	struct sockaddr_in remote_sin_addr;
+	struct sockaddr_in troll_sin_addr;
+	struct sockaddr_in sending;
 	struct sockaddr_in src_addr;
 	struct hostent *hp;
 	char gamma[] = "gamma";
@@ -110,6 +112,39 @@ int main(int argc, char* argv[]){
 			exit(3);
     }
     printf("tcpdServer remote port: %d\n", ntohs(remote_sin_addr.sin_port));
+    
+    ////////////////////////////////////////////////////////////////////////////////
+    //troll port
+    ///////////////////////////////////////////////////////////////////////////////
+    if((troll_sock = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
+	{
+		perror("error opening datagram socket");
+		exit(1);
+	}
+	
+	 	troll_sin_addr.sin_family = htons(AF_INET);
+    troll_sin_addr.sin_port = htons(5540);
+    char beta[] = "beta";
+		hp = gethostbyname(beta);
+		if(hp == 0)
+		{
+			fprintf(stderr, "%s: unknown host\n", argv[1]);
+			exit(2);
+		}
+		bcopy((void *)hp->h_addr, (void *)&troll_sin_addr.sin_addr, hp->h_length);
+	////////////////////////////////////////////////////////////////////////////////
+    //sending to troll port
+    ///////////////////////////////////////////////////////////////////////////////
+		printf("pei\n");
+    hp = gethostbyname("gamma");
+    /* create name with parameters and bind name to socket */
+    sending.sin_family = AF_INET;
+    sending.sin_port = htons(8890);
+	bcopy((void *)hp->h_addr, (void *)&local_sin_addr.sin_addr, hp->h_length);
+	/* construct name of socket to send to */
+	struct Packet ack;
+	ack.address = troll_sin_addr;
+	
 	/* put all zeros in buffer (clear) */
 	bzero(buf,1060);
     struct Packet packet;
@@ -120,7 +155,8 @@ int main(int argc, char* argv[]){
 		printf("received packet\n");
 		ssize_t pie =recvfrom(remote_sock, buf, 1060, 0, (struct sockaddr *)&src_addr , &src_addr_len);
 		i++;
-
+		
+		
 		memcpy(&packet,buf,pie);
 		memcpy(&troll,&packet.address,16);
 		packet.address = empty;
@@ -129,14 +165,21 @@ int main(int argc, char* argv[]){
 		packet.TCPHeader.check = 0;
 		memcpy(buf,&packet,pie);
 		int crc =gen_crc16(buf+16,pie-16);
-		printf("Packet:     size: %d    CRC:   %d\n",i, pie,crc);
+		printf("Packet:   %d  size: %d    CRC:   %d\n",packet.TCPHeader.seq , pie,crc);
 		printf("\n");
 
 		if(crc!= original)
 		{
 				printf("garbled!\n");
 		}
-
+		else
+		{
+			memcpy(&ack,buf,pie);
+			ack.address = troll_sin_addr;
+			ack.TCPHeader.ack = packet.TCPHeader.seq;
+			sendto(troll_sock,&ack,pie,0,(struct sockaddr *)&sending,sizeof(sending));
+		}
+		
 
 		sendto(local_sock,buf,pie,0,(struct sockaddr *)&local_sin_addr,sizeof(local_sin_addr));
 	}
