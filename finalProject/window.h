@@ -7,4 +7,4 @@ typedef struct window{
 
 void initialize_window(window *w, circBuf *c);
 
-void move_window(window *w, int amount);
+void move_window(window *w, circBuf *c);

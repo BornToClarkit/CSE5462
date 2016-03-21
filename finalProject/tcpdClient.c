@@ -12,7 +12,7 @@
 #include "CapitalFunctions.h"
 #include "timerStruct.h"
 #include "circBuf.h"
-
+#include "window.h"
 #define LOCAL_PORT 6650
 #define REMOTE_PORT 9980
 #define CRC16 0x8005
@@ -173,9 +173,12 @@ int main(int argc, char* argv[]){
 
     struct Packet crc;
 		int i = 0;
+		int j = 0;
+		int sequenceArray[20];
     circBuf sendBuf;
-
+		window w;
     initialize_circ_buf(&sendBuf, 67840);
+    initialize_window(&w,&sendBuf);
     int pushed = 0;
     fd_set set; //set of sockets to watch
     int maxFD = max(max(local_sock, timer_from_sock), remote_sock);
@@ -202,20 +205,11 @@ int main(int argc, char* argv[]){
             //from ftpc, need to send to ftps
              ssize_t pie = recvfrom(local_sock, buf, 1060, 0, (struct sockaddr *)&src_addr , &src_addr_len);
              pushed = push_circ_buf(&sendBuf, buf, (int)pie);
-             while(pushed != (int)pie){
-                 //not enough room for all data
-                 //wait here until window is moved up then push more data
-                 pushed += push_circ_buf(&sendBuf, buf, (int)pie);  
-                 printf("not enough room for all data\n");
+             in(pushed == (int)pie){
+                 sendto(local_sock, &one , sizeof(int), 0, (struct sockaddr *)&src_addr , sizeof(src_addr));
              }
              //send back to SEND function
-             int one = 1;
-             printf("sending\n");
-             
-             printf("to this socket : %d\n", src_addr);
-             fflush(stdout);
-             sendto(local_sock, &one , sizeof(int), 0, (struct sockaddr *)&src_addr , sizeof(src_addr));
-             
+            
             // memcpy(&crc,buf,pie);
     		// crc.TCPHeader.check = 0;
     		// memcpy(buf,&crc,pie);
@@ -228,12 +222,78 @@ int main(int argc, char* argv[]){
     		// printf("sent packet\n");
         }
         if(FD_ISSET(remote_sock, &set)){
-            //ACKS from ftps
+            //receive ack
+           	//check if ack sequence # is in the array
+           			ArrayCheckRemove(sequenceArray,...);
+           			
+           			if(sequenceArray[0]==-1)
+           			{
+           				move_window(&w,&sendBuf);
+           				sendto(local_sock, &one , sizeof(int), 0, (struct sockaddr *)&src_addr , sizeof(src_addr));
+           			}
+           			//cancel timer
+           			//rtt stuff
+           	
         }
+        while(j%20<20 && j%20!=0)
+        {
+        		if(ArrayCheck(sequenceArray,j))
+        		{
+        			Packet sending;
+        			memcpy(&sending,sendBuf+(j%20*(1060)),1060);
+        			//packet checksum and sequence #
+        			
+        			sequenceArray[j%20] = j;
+        			//send packet
+        			//start timer with sequence #
+        			//rtt stuff
+        		}
+        		
+        		
+        		j++;     		
+        }
+        
 
 	}
 }
 
+int ArrayCheck(int[] array, int j)
+{
+		int boolean = 0;
+		for(int i = 0; i<20; i++)
+		{
+				if(array[i]==j)
+				{
+						return 0;
+				}
+				else
+				{
+						boolean = 1;
+				}
+				
+		}
+		return boolean;
+}
+
+int ArrayCheckRemove(int[] array, int j)
+{
+		int boolean = 0;
+		for(int i = 0; i<20; i++)
+		{
+				if(array[i]==j)
+				{
+					array[i]=-1;
+					return 0;
+						
+				}
+				else
+				{
+						boolean = 1;
+				}
+				
+		}
+		return boolean;
+}
 //returns pointer to new node;
 struct node* make_node(struct timeval delta_time, int port, int sequence, int flag){
   struct node* tmp;
