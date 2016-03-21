@@ -17,8 +17,6 @@ void initialize_circ_buf(circBuf *c, int size){
 //and returns total amount copied
 int push_circ_buf(circBuf *c, char * msg, int msgLength){
     int copied = 0;
-    printf("dataHead: %i\n", c->dataHead);
-    printf("dataTail: %i\n", c->dataTail);
     if(c->dataHead > c->dataTail){
         if(msgLength <= c->size - c->dataHead){
             memcpy(&(c->data[c->dataHead]), msg, msgLength);

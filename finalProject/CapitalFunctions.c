@@ -28,7 +28,6 @@ ssize_t SEND(int socket, const void*buffer, size_t length, int flags)
 {
 	struct sockaddr_in src_addr;
 	int src_addr_len;
-	printf("SENT called\n");
 	//break up buffer struct that was sent through the buffer so that it fits into the
 	//	arguments of sendto()
 	struct sockaddr_in daemon;
@@ -53,7 +52,6 @@ ssize_t SEND(int socket, const void*buffer, size_t length, int flags)
         }
         if (FD_ISSET(socket, &set)){
         	recvfrom(socket, &tmpBuf, sizeof(int), 0, (struct sockaddr *)&src_addr , &src_addr_len);
-        	printf("returning\n");
         	fflush(stdout);
         	return sent;
         }

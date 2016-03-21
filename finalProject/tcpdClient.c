@@ -172,11 +172,13 @@ int main(int argc, char* argv[]){
 
 
     struct Packet crc;
-		int i = 0;
-		int j = 0;
-		int sequenceArray[20];
+	int i = 0;
+	int j = 0;
+	int sequenceArray[20];
+	int totalRecv = 0;
+	int sent = 0;
     circBuf sendBuf;
-		window w;
+	window w;
     initialize_circ_buf(&sendBuf, 67840);
     initialize_window(&w,&sendBuf);
     int pushed = 0;
@@ -204,23 +206,18 @@ int main(int argc, char* argv[]){
         }
         if(FD_ISSET(local_sock, &set)){
             //from ftpc, need to send to ftps
+             printf("Received packet\n");
+             totalRecv++;
              ssize_t pie = recvfrom(local_sock, buf, 1060, 0, (struct sockaddr *)&src_addr , &src_addr_len);
              pushed = push_circ_buf(&sendBuf, buf, (int)pie);
              if(pushed == (int)pie){
+             	//tell SEND function to unblock
                  sendto(local_sock, &one , sizeof(int), 0, (struct sockaddr *)&src_addr , sizeof(src_addr));
              }
-             //send back to SEND function
-            
-            // memcpy(&crc,buf,pie);
-    		// crc.TCPHeader.check = 0;
-    		// memcpy(buf,&crc,pie);
-    		// crc.TCPHeader.check= gen_crc16(buf+16,pie-16);
-    		// memcpy(buf,&crc,pie);
-    		// i++;
-    		// printf("Packet: %i    size: %d    CRC:   %d\n",i, pie,crc.TCPHeader.check);
-    		// printf("\n");
-    		// sendto(remote_sock, buf, pie, 0, (struct sockaddr *)&remote_sin_addr, sizeof(remote_sin_addr));
-    		// printf("sent packet\n");
+             else{
+             	printf("Buffer is full\n");
+             	fflush(stdout);
+             } 
         }
         if(FD_ISSET(remote_sock, &set)){
             //receive ack
@@ -231,36 +228,55 @@ int main(int argc, char* argv[]){
            	if(sequenceArray[0]==-1)
            	{
            		move_window(&w,&sendBuf);
+           		//remove data from circBuf
            		sendto(local_sock, &one , sizeof(int), 0, (struct sockaddr *)&src_addr , sizeof(src_addr));
            	}
            	//cancel timer
            	//rtt stuff
            	
         }
-        while(j%20<20 && j%20!=0)
-        {
-        		if(ArrayCheck(sequenceArray,j))
-        		{
-        			struct Packet sending;
-        			memcpy(&sending,&sendBuf+(j%20*(1060)),1060);
-        			//packet checksum and sequence #
-        			
-        			sequenceArray[j%20] = j;
-        			//send packet
-        			//start timer with sequence #
-        			//rtt stuff
-        		}
-        		
-        		
-        		j++;     		
-        }
-        
-
+       	
+        int p = 0;
+		char buffer[1060];
+		/*
+		if(sent != totalRecv){
+				
+		}
+		*/
+		
+        	printf("j%20: %i\n", j%20);
+        	if(ArrayCheck(sequenceArray,j))
+        	{
+        		struct Packet sending;
+        		printf("before\n");
+        		memcpy(&sending,sendBuf.data, 1060);
+        		printf("after\n");
+        		fflush(stdout);
+        		//packet checksum and sequence #
+        		sequenceArray[j%20] = j;
+    			//sending.TCPHeader.check = 0;
+    			//memcpy(buffer,&sending,1060);
+    			//sending.TCPHeader.check= gen_crc16(buffer+16,1060-16);
+    			//memcpy(buffer,&sending,1060);
+    			i++;
+    			//printf("Packet: %i    size: %d    CRC:   %d\n",i, pie,crc.TCPHeader.check);
+    			printf("\n");
+    			sendto(remote_sock, &sending, 1060, 0, (struct sockaddr *)&remote_sin_addr, sizeof(remote_sin_addr));
+    			printf("sent packet\n");
+        		//start timer with sequence #
+        		starttimer(5.0, j);
+        		//rtt stuff
+        	}      		
+        	j++; 
+        	
+        	    		      
 	}
 }
 
 int ArrayCheck(int* array, int j)
 {
+	printf("in array check\n");
+	fflush(stdout);
 		int boolean = 0;
 		int i = 0;
 		for(i = 0; i<20; i++)
