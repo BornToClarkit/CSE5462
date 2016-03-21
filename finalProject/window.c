@@ -5,7 +5,7 @@
 #include "circBuf.h"
 
 void initialize_window(window *w, circBuf *c){
-    w->start = &(c->data);
+    w->start = c->data;
     w->end = w->start +20140;
 }
 

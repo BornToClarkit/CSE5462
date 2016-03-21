@@ -180,6 +180,7 @@ int main(int argc, char* argv[]){
     initialize_circ_buf(&sendBuf, 67840);
     initialize_window(&w,&sendBuf);
     int pushed = 0;
+    int one =1;
     fd_set set; //set of sockets to watch
     int maxFD = max(max(local_sock, timer_from_sock), remote_sock);
     //selective repeat
@@ -205,7 +206,7 @@ int main(int argc, char* argv[]){
             //from ftpc, need to send to ftps
              ssize_t pie = recvfrom(local_sock, buf, 1060, 0, (struct sockaddr *)&src_addr , &src_addr_len);
              pushed = push_circ_buf(&sendBuf, buf, (int)pie);
-             in(pushed == (int)pie){
+             if(pushed == (int)pie){
                  sendto(local_sock, &one , sizeof(int), 0, (struct sockaddr *)&src_addr , sizeof(src_addr));
              }
              //send back to SEND function
@@ -224,23 +225,24 @@ int main(int argc, char* argv[]){
         if(FD_ISSET(remote_sock, &set)){
             //receive ack
            	//check if ack sequence # is in the array
-           			ArrayCheckRemove(sequenceArray,...);
-           			
-           			if(sequenceArray[0]==-1)
-           			{
-           				move_window(&w,&sendBuf);
-           				sendto(local_sock, &one , sizeof(int), 0, (struct sockaddr *)&src_addr , sizeof(src_addr));
-           			}
-           			//cancel timer
-           			//rtt stuff
+           	int seq;
+           	recvfrom(remote_sock, &seq, sizeof(int), 0, (struct sockaddr *)&empty , &src_addr_len);
+           	ArrayCheckRemove(sequenceArray, seq);	
+           	if(sequenceArray[0]==-1)
+           	{
+           		move_window(&w,&sendBuf);
+           		sendto(local_sock, &one , sizeof(int), 0, (struct sockaddr *)&src_addr , sizeof(src_addr));
+           	}
+           	//cancel timer
+           	//rtt stuff
            	
         }
         while(j%20<20 && j%20!=0)
         {
         		if(ArrayCheck(sequenceArray,j))
         		{
-        			Packet sending;
-        			memcpy(&sending,sendBuf+(j%20*(1060)),1060);
+        			struct Packet sending;
+        			memcpy(&sending,&sendBuf+(j%20*(1060)),1060);
         			//packet checksum and sequence #
         			
         			sequenceArray[j%20] = j;
@@ -257,10 +259,11 @@ int main(int argc, char* argv[]){
 	}
 }
 
-int ArrayCheck(int[] array, int j)
+int ArrayCheck(int* array, int j)
 {
 		int boolean = 0;
-		for(int i = 0; i<20; i++)
+		int i = 0;
+		for(i = 0; i<20; i++)
 		{
 				if(array[i]==j)
 				{
@@ -275,10 +278,11 @@ int ArrayCheck(int[] array, int j)
 		return boolean;
 }
 
-int ArrayCheckRemove(int[] array, int j)
+int ArrayCheckRemove(int* array, int j)
 {
 		int boolean = 0;
-		for(int i = 0; i<20; i++)
+		int i = 0;
+		for(i = 0; i<20; i++)
 		{
 				if(array[i]==j)
 				{
