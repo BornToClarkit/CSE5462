@@ -1,0 +1,14 @@
+Connor Clark
+Curtis Holton
+
+use the following commands to run the programs
+waf --run tcpchain
+waf --run tcpchain2
+
+the plot can be made by using the included plot file, both commands above have to be used first to create the necessary files used in the plot file.
+
+the command 
+gnuplot plot 
+
+will create the plot with both plots on the same image, this image will be called tcpchain.png
+
