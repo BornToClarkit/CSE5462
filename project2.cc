@@ -50,9 +50,14 @@ CwndChange (Ptr<OutputStreamWrapper> stream, uint32_t oldCwnd, uint32_t newCwnd)
   NS_LOG_UNCOND (Simulator::Now ().GetSeconds () << "\t" << newCwnd);
   *stream->GetStream () << Simulator::Now ().GetSeconds () << "\t" << oldCwnd << "\t" << newCwnd << std::endl;
 }
-
-
-
+/*
+static void 
+SSTChange (Ptr<OutputStreamWrapper> stream, uint32_t oldSST, uint32_t newSST)
+{
+  NS_LOG_UNCOND (Simulator::Now ().GetSeconds () << "\t" << newSST);
+  *stream->GetStream () << Simulator::Now ().GetSeconds () << "\t" << oldSST << "\t" << newSST << std::endl;
+}
+*/
 static void
 RxDrop (Ptr<PcapFileWrapper> file, Ptr<const Packet> p)
 {
@@ -87,7 +92,13 @@ CwndTracer (uint32_t oldval, uint32_t newval)
 {
   NS_LOG_INFO ("Moving cwnd from " << oldval << " to " << newval);
 }
-
+/*
+static void 
+SlowStartTracer (uint32_t oldval, uint32_t newval)
+{
+  NS_LOG_INFO ("Moving slowstart from " << oldval << " to " << newval);
+}
+*/
 int main (int argc, char *argv[])
 {
   // Users may find it convenient to turn on explicit debugging
@@ -194,6 +205,8 @@ int main (int argc, char *argv[])
 
   // Trace changes to the congestion window
   Config::ConnectWithoutContext ("/NodeList/0/$ns3::TcpL4Protocol/SocketList/0/CongestionWindow", MakeCallback (&CwndTracer));
+  
+  Config::ConnectWithoutContext ("/NodeList/0/$ns3::TcpL4Protocol/SocketList/0/SlowStartThreshold", MakeCallback (&CwndTracer));
 
   // ...and schedule the sending "Application"; This is similar to what an 
   // ns3::Application subclass would do internally.
@@ -213,9 +226,11 @@ int main (int argc, char *argv[])
   
   
 AsciiTraceHelper asciiTraceHelper;
+AsciiTraceHelper asciiTraceHelper2;
   Ptr<OutputStreamWrapper> stream = asciiTraceHelper.CreateFileStream ("project2.cwnd");
+  Ptr<OutputStreamWrapper> stream2 = asciiTraceHelper2.CreateFileStream ("project2SST.cwnd");
   localSocket->TraceConnectWithoutContext ("CongestionWindow", MakeBoundCallback (&CwndChange, stream));
-
+  localSocket->TraceConnectWithoutContext ("SlowStartThreshold", MakeBoundCallback (&CwndChange, stream2));
 PcapHelper pcapHelper;
   Ptr<PcapFileWrapper> file = pcapHelper.CreateFile ("project2.pcap", std::ios::out, PcapHelper::DLT_PPP);
   devices3.Get (1)->TraceConnectWithoutContext ("PhyRxDrop", MakeBoundCallback (&RxDrop, file));
